@@ -1,0 +1,34 @@
+{
+    "categories": [
+      { "name": "Politics", "slug": "politics", "created_at": "2025-09-27T00:00:00Z" },
+      { "name": "World", "slug": "world", "created_at": "2025-09-27T00:00:00Z" }
+    ],
+    "articles": [
+      {
+        "created_at": "2025-09-27T00:00:00Z",
+        "updated_at": "2025-09-27T00:00:00Z",
+        "author_id": null,
+        "title_kn": "ಕನ್ನಡ ಶೀರ್ಷಿಕೆ",
+        "title_en": "English Title",
+        "content_kn": "<p>Kannada content</p>",
+        "content_en": "<p>English content</p>",
+        "reporter": "Name",
+        "image_url": "https://example.com/cover.jpg",
+        "is_breaking": false,
+        "breaking_expires_at": null,
+        "status": "published",
+        "published_at": "2025-09-27T00:00:00Z",
+        "category_slugs": ["politics","world"]
+      }
+    ],
+    "media_items": [
+      { "created_at": "2025-09-27T00:00:00Z", "uploaded_by": null, "name": "Cover", "file_url": "https://example.com/cover.jpg", "file_type": "image" }
+    ],
+    "rss_feeds": [
+      { "created_at":"2025-09-27T00:00:00Z", "source_name":"Source", "url":"https://example.com/feed.xml", "is_active": true }
+    ],
+    "stream_settings": [
+      { "created_at":"2025-09-27T00:00:00Z", "updated_at":"2025-09-27T00:00:00Z", "stream_url":"https://example.com/stream.m3u8", "is_live":true, "subtitle":"Live" }
+    ],
+    "bookmarks": []
+  }
