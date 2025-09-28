@@ -3,16 +3,23 @@ import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Clock, TrendingUp, Share2 } from 'lucide-react';
+import { Clock, TrendingUp, Share2, Eye } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from 'react';
 
 export default function ArticleCard({ article }) {
     const { language } = useLanguage();
     const { toast } = useToast();
+    const [viewCount] = useState(article.views || 0);
     
     const title = (() => {
-        if (language === 'kn') return article.title_kn || article.title_en || '';
-        return article.title_en || article.title_kn || '';
+        if (language === 'kn') {
+            // For Kannada, prefer title_kn, fallback to title_en
+            return article.title_kn || article.title_en || '';
+        } else {
+            // For English, prefer title_en, fallback to title_kn
+            return article.title_en || article.title_kn || '';
+        }
     })();
     const categoryText = language === 'kn' ? article.category : article.category;
 
@@ -216,10 +223,10 @@ Shared from Edens News`;
                                 </span>
                             </Badge>
                         )}
-                        {article.views > 100 && (
+                        {viewCount > 0 && (
                             <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                <TrendingUp className="w-3 h-3" />
-                                <span>{article.views}</span>
+                                <Eye className="w-3 h-3" />
+                                <span>{viewCount}</span>
                             </div>
                         )}
                     </div>

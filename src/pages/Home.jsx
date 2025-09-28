@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { articlesRepo } from '@/api/repos/articlesRepo';
+import { analyticsRepo } from '@/api/repos/analyticsRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import ArticleCard from '@/components/news/ArticleCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,7 +32,22 @@ export default function Home() {
         } else {
           fetchedArticles = await articlesRepo.list({ limit: 20 });
         }
-        setArticles(fetchedArticles);
+        
+        // Load view counts for all articles
+        if (fetchedArticles.length > 0) {
+          const articleIds = fetchedArticles.map(article => article.id);
+          const viewCounts = await analyticsRepo.getViewCounts(articleIds);
+          
+          // Add view counts to articles
+          const articlesWithViews = fetchedArticles.map(article => ({
+            ...article,
+            views: viewCounts[article.id] || 0
+          }));
+          
+          setArticles(articlesWithViews);
+        } else {
+          setArticles(fetchedArticles);
+        }
       } catch (error) {
         console.error("Failed to fetch articles:", error);
         // Set empty array to prevent infinite loading state

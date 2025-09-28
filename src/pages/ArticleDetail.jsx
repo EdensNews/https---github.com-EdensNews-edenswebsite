@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { bookmarksRepo } from '@/api/repos/bookmarksRepo';
+import { analyticsRepo } from '@/api/repos/analyticsRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +21,7 @@ export default function ArticleDetail() {
     const [article, setArticle] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isBookmarked, setIsBookmarked] = useState(false);
+    const [hasTrackedView, setHasTrackedView] = useState(false);
     const { user, isLoading: userLoading } = useLanguage();
 
     const query = useQuery();
@@ -43,6 +45,28 @@ export default function ArticleDetail() {
         };
         fetchArticle();
     }, [articleId]);
+
+    // Track view when article is loaded and user has spent some time on the page
+    useEffect(() => {
+        const trackView = async () => {
+            if (!hasTrackedView && article && articleId) {
+                try {
+                    // Wait 3 seconds to ensure user is actually reading the article
+                    const timer = setTimeout(async () => {
+                        await analyticsRepo.trackView(articleId, user?.id);
+                        setHasTrackedView(true);
+                        console.log(`Tracked view for article: ${articleId}`);
+                    }, 3000);
+                    
+                    return () => clearTimeout(timer);
+                } catch (error) {
+                    console.error('Failed to track view:', error);
+                }
+            }
+        };
+
+        trackView();
+    }, [article, articleId, hasTrackedView, user?.id]);
 
     useEffect(() => {
         const checkBookmark = async () => {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss } from 'lucide-react';
+import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const adminSections = [
@@ -55,6 +55,13 @@ const adminSections = [
         icon: Settings,
         page: 'AdminSettings',
         color: 'from-gray-500 to-gray-600'
+    },
+    {
+        title: { kn: 'ಸ್ವಯಂಚಾಲಿತ ಅನುವಾದ', en: 'Auto Translation' },
+        description: { kn: 'RSS ಫೀಡ್‌ಗಳಿಂದ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅನುವಾದಿಸಿ', en: 'Automatically translate from RSS feeds' },
+        icon: RefreshCw,
+        page: 'AdminAutoTranslate',
+        color: 'from-cyan-500 to-cyan-600'
     }
 ];
 

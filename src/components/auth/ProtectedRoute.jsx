@@ -13,10 +13,6 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const { language } = useLanguage();
 
-    useEffect(() => {
-        checkAuthentication();
-    }, [checkAuthentication]);
-
     const checkAuthentication = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -34,6 +30,10 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
         }
         setIsLoading(false);
     }, [requireAdmin]);
+
+    useEffect(() => {
+        checkAuthentication();
+    }, [checkAuthentication]);
 
     const handleLogin = async () => {
         try {

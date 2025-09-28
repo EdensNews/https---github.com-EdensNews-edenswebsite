@@ -35,10 +35,6 @@ function AdminStreamContent() {
     const { language } = useLanguage();
     const { toast } = useToast();
 
-    useEffect(() => {
-        loadStreamSettings();
-    }, []);
-
     const loadStreamSettings = async () => {
         setIsLoading(true);
         try {
@@ -55,6 +51,10 @@ function AdminStreamContent() {
         }
         setIsLoading(false);
     };
+
+    useEffect(() => {
+        loadStreamSettings();
+    }, []);
 
     const handleSave = async () => {
         setIsSaving(true);

@@ -2,6 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for breaking news */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.6);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 14s linear infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
 
 /* :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -155,4 +195,65 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* QuillEditor Styles */
+.quill-wrapper .ql-editor {
+  min-height: 300px;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quill-wrapper .ql-toolbar {
+  border-top: 1px solid hsl(var(--border));
+  border-left: 1px solid hsl(var(--border));
+  border-right: 1px solid hsl(var(--border));
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.quill-wrapper .ql-container {
+  border-bottom: 1px solid hsl(var(--border));
+  border-left: 1px solid hsl(var(--border));
+  border-right: 1px solid hsl(var(--border));
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.dark .quill-wrapper .ql-toolbar {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.dark .quill-wrapper .ql-container {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+
+.dark .quill-wrapper .ql-editor {
+  color: hsl(var(--foreground));
+}
+
+.dark .quill-wrapper .ql-stroke {
+  stroke: hsl(var(--foreground));
+}
+
+.dark .quill-wrapper .ql-fill {
+  fill: hsl(var(--foreground));
+}
+
+.dark .quill-wrapper .ql-picker-label {
+  color: hsl(var(--foreground));
+}
+
+.dark .quill-wrapper .ql-picker-options {
+  background-color: hsl(var(--popover));
+  border-color: hsl(var(--border));
+}
+
+.dark .quill-wrapper .ql-picker-item {
+  color: hsl(var(--foreground));
+}
+
+.dark .quill-wrapper .ql-picker-item:hover {
+  background-color: hsl(var(--accent));
 }

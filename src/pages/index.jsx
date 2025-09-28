@@ -28,6 +28,8 @@ import AdminCategories from "./AdminCategories";
 
 import AdminRss from "./AdminRss";
 
+import AdminAutoTranslate from "./AdminAutoTranslate";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -59,6 +61,8 @@ const PAGES = {
     AdminCategories: AdminCategories,
     
     AdminRss: AdminRss,
+    
+    AdminAutoTranslate: AdminAutoTranslate,
     
 }
 
@@ -115,6 +119,8 @@ function PagesContent() {
                 <Route path="/admincategories" element={<AdminCategories />} />
                 
                 <Route path="/adminrss" element={<AdminRss />} />
+                
+                <Route path="/adminautotranslate" element={<AdminAutoTranslate />} />
                 
             </Routes>
         </Layout>

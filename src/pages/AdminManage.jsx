@@ -38,10 +38,6 @@ function AdminManageContent() {
     const { toast } = useToast();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        fetchArticles();
-    }, [fetchArticles]);
-
     const fetchArticles = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -53,6 +49,10 @@ function AdminManageContent() {
         }
         setIsLoading(false);
     }, [toast]);
+
+    useEffect(() => {
+        fetchArticles();
+    }, [fetchArticles]);
 
     const handleDelete = async (articleId) => {
         try {

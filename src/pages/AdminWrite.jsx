@@ -6,6 +6,7 @@ import { categoriesRepo } from '@/api/repos/categoriesRepo';
 import { articleCategoriesRepo } from '@/api/repos/articleCategoriesRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import { InvokeLLM } from '@/api/integrations';
+import { detectLanguage, getTranslationDirection } from '@/utils/languageDetection';
 import { supabase } from '@/api/supabaseClient';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,8 +20,7 @@ import { Save, Languages, Upload, ArrowLeft, Link as LinkIcon, Image, Video, Cop
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useToast } from '@/components/ui/use-toast';
-import ReactQuill from 'react-quill';
-import 'quill/dist/quill.snow.css';
+import QuillEditor from '@/components/ui/QuillEditor';
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -95,6 +95,116 @@ function AdminWriteContent() {
                         setImageUrlInput(normalized.image_url);
                         setImageInputType('link');
                     }
+                } else if (rssItem) {
+                    // Handle RSS item import
+                    const rssArticle = {
+                        title_kn: rssItem.title || '',
+                        title_en: '', // Will be translated if needed
+                        content_kn: rssItem.description || '',
+                        content_en: '', // Will be translated if needed
+                        reporter: 'RSS Import',
+                        image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || '',
+                        category: 'rss', // RSS category
+                        is_breaking: false
+                    };
+
+                    setArticle(rssArticle);
+
+                    if (rssArticle.image_url) {
+                        setImageUrlInput(rssArticle.image_url);
+                        setImageInputType('link');
+                    }
+
+                    // Auto-translate RSS content based on detected language
+                    if (rssItem.title && rssItem.description) {
+                        try {
+                            const titleText = rssItem.title || '';
+                            const contentText = rssItem.description || '';
+                            const combinedText = `${titleText} ${contentText}`;
+                            
+                            const translationInfo = getTranslationDirection(combinedText);
+                            
+                            if (translationInfo.needsTranslation) {
+                                if (translationInfo.sourceLanguage === 'en') {
+                                    // Translate English to Kannada
+                                    const translationResult = await InvokeLLM({
+                                        prompt: `Translate the following English news article to Kannada. Maintain journalistic style and accuracy. Preserve any HTML formatting. Title: ${rssItem.title}. Content: ${rssItem.description || ''}. Provide the translation in this exact JSON format: {"title_kn": "Kannada title", "content_kn": "Kannada content with preserved HTML formatting"}`,
+                                        response_json_schema: { type: "object", properties: { title_kn: { type: "string" }, content_kn: { type: "string" } } }
+                                    });
+                                    setArticle(prev => ({ 
+                                        ...prev, 
+                                        title_kn: translationResult.title_kn, 
+                                        content_kn: translationResult.content_kn,
+                                        title_en: rssItem.title, // Keep original English
+                                        content_en: rssItem.description || ''
+                                    }));
+                                    toast({ title: `RSS article imported and translated (${translationInfo.direction})` });
+                                } else {
+                                    // Translate Kannada to English
+                                    const translationResult = await InvokeLLM({
+                                        prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve any HTML formatting. Title: ${rssItem.title}. Content: ${rssItem.description || ''}. Provide the translation in this exact JSON format: {"title_en": "English title", "content_en": "English content with preserved HTML formatting"}`,
+                                        response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
+                                    });
+                                    setArticle(prev => ({ 
+                                        ...prev, 
+                                        title_kn: rssItem.title, // Keep original Kannada
+                                        content_kn: rssItem.description || '',
+                                        title_en: translationResult.title_en,
+                                        content_en: translationResult.content_en
+                                    }));
+                                    toast({ title: `RSS article imported and translated (${translationInfo.direction})` });
+                                }
+                            } else {
+                                // No translation detected, but try to translate anyway if content looks like English
+                                const titleText = rssItem.title || '';
+                                const contentText = rssItem.description || '';
+                                
+                                // If title contains English words, assume it's English and translate to Kannada
+                                if (titleText.match(/[A-Za-z]/)) {
+                                    try {
+                                        const translationResult = await InvokeLLM({
+                                            prompt: `Translate the following English news article to Kannada. Maintain journalistic style and accuracy. Preserve any HTML formatting. Title: ${rssItem.title}. Content: ${rssItem.description || ''}. Provide the translation in this exact JSON format: {"title_kn": "Kannada title", "content_kn": "Kannada content with preserved HTML formatting"}`,
+                                            response_json_schema: { type: "object", properties: { title_kn: { type: "string" }, content_kn: { type: "string" } } }
+                                        });
+                                        setArticle(prev => ({ 
+                                            ...prev, 
+                                            title_kn: translationResult.title_kn, 
+                                            content_kn: translationResult.content_kn,
+                                            title_en: rssItem.title, // Keep original English
+                                            content_en: rssItem.description || ''
+                                        }));
+                                        toast({ title: "RSS article imported and translated (EN → KN)" });
+                                    } catch (translationError) {
+                                        console.error('Fallback translation failed:', translationError);
+                                        // Import as-is if translation fails
+                                        setArticle(prev => ({ 
+                                            ...prev, 
+                                            title_en: rssItem.title,
+                                            content_en: rssItem.description || ''
+                                        }));
+                                        toast({ title: "RSS article imported (translation failed)" });
+                                    }
+                                } else {
+                                    // No translation needed, just import as-is
+                                    setArticle(prev => ({ 
+                                        ...prev, 
+                                        title_en: rssItem.title,
+                                        content_en: rssItem.description || ''
+                                    }));
+                                    toast({ title: "RSS article imported (no translation needed)" });
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Auto-translation failed:', error);
+                            // Keep original content if translation fails
+                            setArticle(prev => ({ 
+                                ...prev, 
+                                title_en: rssItem.title,
+                                content_en: rssItem.description || ''
+                            }));
+                            toast({ title: "RSS article imported (translation failed)", variant: "destructive" });
+                        }
+                    }
                 }
 
                 setCategoryOptions(cats || []);
@@ -143,7 +253,7 @@ function AdminWriteContent() {
         return null;
     };
 
-    const handleTranslate = async () => {
+    const handleTranslateToEnglish = async () => {
         if (!article.title_kn || !article.content_kn) {
             toast({ title: "Please enter Kannada title and content first", variant: "destructive" });
             return;
@@ -155,7 +265,27 @@ function AdminWriteContent() {
                 response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
             });
             setArticle(prev => ({ ...prev, title_en: translationResult.title_en, content_en: translationResult.content_en }));
-            toast({ title: "Translation completed successfully" });
+            toast({ title: "Translation to English completed successfully" });
+        } catch (error) {
+            console.error('Translation failed:', error);
+            toast({ title: "Translation failed. Please try again.", variant: "destructive" });
+        }
+        setIsTranslating(false);
+    };
+
+    const handleTranslateToKannada = async () => {
+        if (!article.title_en || !article.content_en) {
+            toast({ title: "Please enter English title and content first", variant: "destructive" });
+            return;
+        }
+        setIsTranslating(true);
+        try {
+            const translationResult = await InvokeLLM({
+                prompt: `Translate the following English news article to Kannada. Maintain journalistic style and accuracy. Preserve any HTML formatting, image tags, and video embeds. Title: ${article.title_en}. Content: ${article.content_en}. Provide the translation in this exact JSON format: {"title_kn": "Kannada title", "content_kn": "Kannada content with preserved HTML formatting"}`,
+                response_json_schema: { type: "object", properties: { title_kn: { type: "string" }, content_kn: { type: "string" } } }
+            });
+            setArticle(prev => ({ ...prev, title_kn: translationResult.title_kn, content_kn: translationResult.content_kn }));
+            toast({ title: "Translation to Kannada completed successfully" });
         } catch (error) {
             console.error('Translation failed:', error);
             toast({ title: "Translation failed. Please try again.", variant: "destructive" });
@@ -290,6 +420,16 @@ function AdminWriteContent() {
                 status: 'published',
                 published_at: nowIso,
             };
+
+            // Add RSS tracking fields if this is an RSS import
+            if (rssItem) {
+                payload.is_rss_import = true;
+                payload.rss_source_url = rssItem.link || '';
+                payload.rss_article_id = rssItem.id || rssItem.guid || rssItem.link;
+                payload.rss_guid = rssItem.guid || null;
+                payload.rss_link = rssItem.link || '';
+                payload.rss_pub_date = rssItem.pubDate ? new Date(rssItem.pubDate).toISOString() : null;
+            }
             // Set breaking news expiration to 1 hour from now if breaking news is enabled
             if (article.is_breaking) {
                 const expirationTime = new Date();
@@ -319,6 +459,28 @@ function AdminWriteContent() {
             } catch (e) {
                 console.warn('Category link skipped:', e?.message || e);
             }
+
+            // Mark RSS article as processed if this was an RSS import
+            if (rssItem && saved?.id) {
+                try {
+                    const feedId = rssItem.feedId || null;
+                    if (feedId) {
+                        console.log(`Marking RSS article as processed: ${rssItem.title}`);
+                        await rssRepo.markArticleAsProcessed(feedId, rssItem, saved.id);
+                        
+                        // Show success message for RSS import
+                        toast({ 
+                            title: "RSS Article Imported Successfully!", 
+                            description: "This article has been translated and saved. It will not appear in future RSS fetches.",
+                            duration: 4000
+                        });
+                    }
+                } catch (rssError) {
+                    console.warn('Failed to mark RSS article as processed:', rssError);
+                    // Don't fail the save operation if RSS tracking fails
+                }
+            }
+
             // Small delay to let toast auto-dismiss before navigation
             setTimeout(() => navigate(createPageUrl('AdminManage')), 300);
         } catch (error) {
@@ -328,27 +490,6 @@ function AdminWriteContent() {
         setIsSaving(false);
     };
     
-    // Enhanced Quill modules with comprehensive formatting options
-    const quillModules = { 
-        toolbar: [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'font': ['sans-serif', 'serif', 'monospace'] }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            ['blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['clean']
-        ],
-        clipboard: {
-            matchVisual: false,
-        }
-    };
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -531,14 +672,17 @@ function AdminWriteContent() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="font-kannada dark:text-gray-200">ಕನ್ನಡ ವಿಷಯ</CardTitle>
-                            <Button 
-                                onClick={handleTranslate} 
-                                disabled={isTranslating || !article.title_kn || !article.content_kn} 
-                                variant="outline"
-                            >
-                                <Languages className="w-4 h-4 mr-2" />
-                                {isTranslating ? 'Translating...' : 'Translate to English'}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button 
+                                    onClick={handleTranslateToEnglish} 
+                                    disabled={isTranslating || !article.title_kn || !article.content_kn} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    <Languages className="w-4 h-4 mr-2" />
+                                    {isTranslating ? 'Translating...' : 'To English'}
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
@@ -552,12 +696,10 @@ function AdminWriteContent() {
                             </div>
                             <div>
                                 <Label className="font-kannada dark:text-gray-300">ವಿಷಯ</Label>
-                                <ReactQuill 
-                                    theme="snow" 
+                                <QuillEditor 
                                     value={article.content_kn} 
                                     onChange={(value) => setArticle({...article, content_kn: value})} 
-                                    modules={quillModules} 
-                                    className="dark:text-white [&_.ql-editor]:min-h-[300px]" 
+                                    className="dark:text-white" 
                                     placeholder="ಇಲ್ಲಿ ಕನ್ನಡದಲ್ಲಿ ಲೇಖನ ಬರೆಯಿರಿ..."
                                 />
                             </div>
@@ -565,8 +707,19 @@ function AdminWriteContent() {
                     </Card>
 
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle className="dark:text-gray-200">English Translation</CardTitle>
+                            <div className="flex gap-2">
+                                <Button 
+                                    onClick={handleTranslateToKannada} 
+                                    disabled={isTranslating || !article.title_en || !article.content_en} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    <Languages className="w-4 h-4 mr-2" />
+                                    {isTranslating ? 'Translating...' : 'To Kannada'}
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
@@ -579,12 +732,10 @@ function AdminWriteContent() {
                             </div>
                             <div>
                                 <Label className="dark:text-gray-300">Content</Label>
-                                <ReactQuill 
-                                    theme="snow" 
+                                <QuillEditor 
                                     value={article.content_en || ''} 
                                     onChange={(value) => setArticle({...article, content_en: value})} 
-                                    modules={quillModules} 
-                                    className="dark:text-white [&_.ql-editor]:min-h-[300px]" 
+                                    className="dark:text-white" 
                                     placeholder="Write English article content here..."
                                 />
                             </div>
