@@ -104,31 +104,22 @@ Shared from Edens News`;
             }
         }
         
-        // Strategy 2: Try sharing with image thumbnail
+        // Strategy 2: Try sharing with image thumbnail (client-side generation)
         if (imageUrl && navigator.canShare && navigator.share) {
             try {
-                // Create a thumbnail URL if this is a Supabase storage URL
-                let thumbnailUrl = imageUrl;
-                
-                // Check if this is a Supabase storage URL and create a proper thumbnail transformation
-                if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
-                    // Convert the regular URL to a render/image URL with transformation parameters
-                    const urlObj = new URL(imageUrl);
-                    const bucketAndPath = urlObj.pathname.replace('/storage/v1/object/public/', '');
-                    const baseUrl = urlObj.origin;
-                    // Create the proper transformation URL
-                    thumbnailUrl = `${baseUrl}/storage/v1/render/image/public/${bucketAndPath}?width=400&height=400&resize=cover`;
-                }
-                
-                // Try to fetch the thumbnail
-                const res = await fetch(thumbnailUrl, { mode: 'cors' });
-                if (res.ok) {
-                    const blob = await res.blob();
+                // Fetch the full-size image
+                const response = await fetch(imageUrl, { mode: 'cors' });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    
+                    // Generate thumbnail using HTML5 Canvas
+                    const thumbnailBlob = await generateThumbnail(blob, 400, 400);
+                    
                     const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
                     // Preserve the original file extension
                     const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
                     const safeName = `thumbnail_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
-                    const file = new File([blob], safeName, { type: blob.type || 'image/jpeg' });
+                    const file = new File([thumbnailBlob], safeName, { type: thumbnailBlob.type || 'image/jpeg' });
                     
                     const shareData = {
                         title: title,
@@ -142,33 +133,9 @@ Shared from Edens News`;
                         toast({ title: "Article shared with thumbnail!" });
                         return;
                     }
-                } else {
-                    console.warn('Failed to fetch thumbnail, falling back to full image');
-                    // If thumbnail fails, try the full image
-                    const fullRes = await fetch(imageUrl, { mode: 'cors' });
-                    if (fullRes.ok) {
-                        const blob = await fullRes.blob();
-                        const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
-                        const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
-                        const safeName = `image_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
-                        const file = new File([blob], safeName, { type: blob.type || 'image/jpeg' });
-                        
-                        const shareData = {
-                            title: title,
-                            text: shareText,
-                            url: url,
-                            files: [file]
-                        };
-                        
-                        if (navigator.canShare(shareData)) {
-                            await navigator.share(shareData);
-                            toast({ title: "Article shared with image!" });
-                            return;
-                        }
-                    }
                 }
             } catch (err) {
-                console.warn('Failed to share with image:', err);
+                console.warn('Failed to share with thumbnail:', err);
             }
         }
         
@@ -180,6 +147,47 @@ Shared from Edens News`;
             console.error('Failed to copy to clipboard:', err);
             toast({ title: "Failed to share article", variant: "destructive" });
         }
+    };
+    
+    // Helper function to generate thumbnail using HTML5 Canvas
+    const generateThumbnail = (blob, maxWidth, maxHeight) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => {
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate dimensions maintaining aspect ratio
+                let { width, height } = img;
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                // Set canvas dimensions
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw image on canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to blob
+                canvas.toBlob(resolve, 'image/jpeg', 0.8);
+            };
+            
+            img.onerror = reject;
+            
+            // Load image from blob
+            img.src = URL.createObjectURL(blob);
+        });
     };
     
     if (isLoading) {
