@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, User as UserIcon, Bookmark, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useToast } from "@/components/ui/use-toast";
+// toast removed per request
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -25,7 +25,6 @@ export default function ArticleDetail() {
     const query = useQuery();
     const articleId = query.get('id');
     const { language } = useLanguage();
-    const { toast } = useToast();
 
     useEffect(() => {
         const fetchArticle = async () => {
@@ -56,32 +55,24 @@ export default function ArticleDetail() {
     }, [user, article]);
 
     const handleBookmark = async () => {
-        if (!user) {
-            toast({ title: "Please login to bookmark articles.", variant: "destructive" });
-            return;
-        }
-        try {
-            if (isBookmarked) {
-                await bookmarksRepo.remove(user.id, article.id);
-                setIsBookmarked(false);
-                toast({ title: "Bookmark removed" });
-            } else {
-                await bookmarksRepo.add(user.id, article.id);
-                setIsBookmarked(true);
-                toast({ title: "Article bookmarked!" });
+        if (!user) return;
+            try {
+                if (isBookmarked) {
+                    await bookmarksRepo.remove(user.id, article.id);
+                    setIsBookmarked(false);
+                } else {
+                    await bookmarksRepo.add(user.id, article.id);
+                    setIsBookmarked(true);
+                }
+            } catch (error) {
+                console.error("Failed to update bookmarks", error);
             }
-        } catch (error) {
-            console.error("Failed to update bookmarks", error);
-            toast({ title: "Failed to update bookmark.", variant: "destructive" });
-        }
-    };
+;
 
     const handleShare = async () => {
         const title = language === 'kn' ? (article.title_kn || article.title_en) : (article.title_en || article.title_kn);
-        const url = window.location.href;
-        const imageUrl = article.image_url;
-        
-        // Create a more comprehensive share text that works across platforms
+        // Use consistent URL structure
+        const url = `${window.location.origin}/articledetail?id=${articleId}`;
         const shareText = `${title}
 
 ${url}
@@ -91,61 +82,15 @@ Shared from Edens News`;
         // Strategy 1: Try text-only sharing first (this ensures text is always visible)
         if (navigator.share) {
             try {
-                await navigator.share({ 
-                    title: title,
-                    text: shareText,
-                    url: url
-                });
-                toast({ title: "Article shared!" });
+                await navigator.share({ title, text: shareText, url });
                 return;
-            } catch (err) {
-                // User cancelled or other error, continue to file sharing
-                console.warn('Text-only share failed:', err);
-            }
+            } catch (_) { /* user cancelled */ }
         }
-        
-        // Strategy 2: Try sharing with image thumbnail (client-side generation)
-        if (imageUrl && navigator.canShare && navigator.share) {
-            try {
-                // Fetch the full-size image
-                const response = await fetch(imageUrl, { mode: 'cors' });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    
-                    // Generate thumbnail using HTML5 Canvas
-                    const thumbnailBlob = await generateThumbnail(blob, 400, 400);
-                    
-                    const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
-                    // Preserve the original file extension
-                    const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
-                    const safeName = `thumbnail_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
-                    const file = new File([thumbnailBlob], safeName, { type: thumbnailBlob.type || 'image/jpeg' });
-                    
-                    const shareData = {
-                        title: title,
-                        text: shareText,
-                        url: url,
-                        files: [file]
-                    };
-                    
-                    if (navigator.canShare(shareData)) {
-                        await navigator.share(shareData);
-                        toast({ title: "Article shared with thumbnail!" });
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.warn('Failed to share with thumbnail:', err);
-            }
-        }
-        
         // Final fallback: copy to clipboard
         try {
             await navigator.clipboard.writeText(shareText);
-            toast({ title: "Copied to clipboard!" });
         } catch (err) {
             console.error('Failed to copy to clipboard:', err);
-            toast({ title: "Failed to share article", variant: "destructive" });
         }
     };
     
@@ -211,10 +156,12 @@ Shared from Edens News`;
     })();
     const content = language === 'kn' ? (article.content_kn || article.content_en) : (article.content_en || article.content_kn);
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const canonicalUrl = `${siteUrl}/ArticleDetail?id=${article.id}`;
+    const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
     const shareImage = article.image_url && article.image_url.startsWith('http') ? article.image_url : `${siteUrl}${article.image_url || ''}`;
-    const waText = encodeURIComponent(`${title}\n\n${canonicalUrl}`);
+    // Use Netlify function URL for OG previews when sharing
+    const ogShareUrl = `${siteUrl}/.netlify/functions/share-og?id=${article.id}`;
+    const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     
     return (

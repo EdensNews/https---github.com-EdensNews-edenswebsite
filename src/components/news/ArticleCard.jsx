@@ -37,7 +37,8 @@ export default function ArticleCard({ article }) {
         e.preventDefault();
         e.stopPropagation();
         
-        const url = `${window.location.origin}${createPageUrl(`ArticleDetail?id=${article.id}`)}`;
+        // Use the same URL structure as the actual route
+        const url = `${window.location.origin}/articledetail?id=${article.id}`;
         
         // Create a more comprehensive share text that works across platforms
         const shareText = `${title}
@@ -54,7 +55,7 @@ Shared from Edens News`;
                     text: shareText,
                     url: url
                 });
-                toast({ title: "Article shared!" });
+                toast({ title: "Article shared!", duration: 3000 });
                 return;
             } catch (err) {
                 // User cancelled or other error, continue to file sharing
@@ -89,7 +90,7 @@ Shared from Edens News`;
                     
                     if (navigator.canShare(shareData)) {
                         await navigator.share(shareData);
-                        toast({ title: "Article shared with thumbnail!" });
+                        toast({ title: "Article shared with thumbnail!", duration: 3000 });
                         return;
                     }
                 }
@@ -101,10 +102,10 @@ Shared from Edens News`;
         // Final fallback: copy to clipboard
         try {
             await navigator.clipboard.writeText(shareText);
-            toast({ title: "Copied to clipboard!" });
+            toast({ title: "Copied to clipboard!", duration: 3000 });
         } catch (err) {
             console.error('Failed to copy to clipboard:', err);
-            toast({ title: "Failed to share article", variant: "destructive" });
+            toast({ title: "Failed to share article", variant: "destructive", duration: 5000 });
         }
     };
     
