@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTheme } from '@/components/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Loader2 } from 'lucide-react';

@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { Article } from '@/api/entities';
 import { User } from '@/api/entities';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -10,7 +11,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button'; // Added this import
+import { Button } from '@/components/ui/button';
 
 export default function AdminAnalytics() {
     return (
@@ -69,6 +70,12 @@ function AdminAnalyticsContent() {
             </CardContent>
         </Card>
     );
+
+    StatCard.propTypes = {
+        title: PropTypes.string.isRequired,
+        value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        icon: PropTypes.elementType.isRequired
+    };
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { User } from '@/api/user';
 import { siteSettingsRepo } from '@/api/repos/siteSettingsRepo';
 import { categoriesRepo } from '@/api/repos/categoriesRepo';
-import { Menu, X, Search, Radio, Shield, User as UserIcon, LogIn, Bookmark, ChevronDown, Bot } from 'lucide-react';
+import { Menu, Search, Radio, Shield, User as UserIcon, LogIn, Bookmark, ChevronDown, Bot } from 'lucide-react';
 import LanguageToggle from '@/components/ui/LanguageToggle';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/LanguageContext';
@@ -45,7 +45,6 @@ const fallbackCategoryLinks = [
 export default function Header() {
   const { user, isLoading: userLoading } = useLanguage();
   const { language } = useLanguage();
-  const [settings, setSettings] = useState({ ai_app_url: '' });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
 
@@ -55,12 +54,11 @@ export default function Header() {
         // Check cache first
         const cachedSettings = localStorage.getItem('cached_site_settings');
         if (cachedSettings) {
-          setSettings(JSON.parse(cachedSettings));
+          // Settings loaded from cache
         }
 
         const latest = await siteSettingsRepo.getLatest();
         if (latest) {
-          setSettings(latest);
           // Cache the settings
           localStorage.setItem('cached_site_settings', JSON.stringify(latest));
         }
@@ -76,7 +74,7 @@ export default function Header() {
         } else {
           setCategories(fallbackCategoryLinks);
         }
-      } catch (e) {
+      } catch {
         console.warn('Failed to load categories for header, using fallback');
         setCategories(fallbackCategoryLinks);
       }

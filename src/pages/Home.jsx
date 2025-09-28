@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import ArticleCard from '@/components/news/ArticleCard';

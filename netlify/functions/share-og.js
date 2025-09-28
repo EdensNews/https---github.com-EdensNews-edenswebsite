@@ -1,6 +1,7 @@
 // Netlify Function: share-og
 // Returns server-rendered HTML with Open Graph/Twitter meta for an article,
 // then auto-redirects users to the SPA route.
+/* eslint-env node */
 
 export const handler = async (event) => {
   try {
@@ -40,11 +41,22 @@ export const handler = async (event) => {
 
     // Ensure absolute image URL
     const siteOrigin = process.env.PUBLIC_SITE_ORIGIN || 'https://edensnews.netlify.app';
-    const imageAbsolute = (article.image_url && /^https?:/i.test(article.image_url))
-      ? article.image_url
-      : `${siteOrigin}${article.image_url || ''}`;
+    let imageAbsolute = null;
+    
+    if (article.image_url) {
+      if (/^https?:/i.test(article.image_url)) {
+        // Already absolute URL
+        imageAbsolute = article.image_url;
+      } else {
+        // Relative URL, make it absolute
+        imageAbsolute = `${siteOrigin}${article.image_url.startsWith('/') ? '' : '/'}${article.image_url}`;
+      }
+    }
 
     const canonical = `${siteOrigin}/articledetail?id=${encodeURIComponent(id)}`;
+    
+    // Add a note for development
+    const isDevelopment = siteOrigin.includes('localhost') || siteOrigin.includes('127.0.0.1');
 
     const html = `<!doctype html>
 <html lang="en">
@@ -61,11 +73,15 @@ export const handler = async (event) => {
   <meta property="og:description" content="${escapeHtml(description)}" />
   ${imageAbsolute ? `<meta property="og:image" content="${escapeAttr(imageAbsolute)}" />` : ''}
   ${imageAbsolute ? `<meta property="og:image:secure_url" content="${escapeAttr(imageAbsolute)}" />` : ''}
+  ${imageAbsolute ? `<meta property="og:image:width" content="1200" />` : ''}
+  ${imageAbsolute ? `<meta property="og:image:height" content="630" />` : ''}
+  ${imageAbsolute ? `<meta property="og:image:alt" content="${escapeHtml(title)}" />` : ''}
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   ${imageAbsolute ? `<meta name="twitter:image" content="${escapeAttr(imageAbsolute)}" />` : ''}
+  ${imageAbsolute ? `<meta name="twitter:image:alt" content="${escapeHtml(title)}" />` : ''}
 
   <meta http-equiv="refresh" content="0; url=${canonical}" />
   <script>window.location.replace(${JSON.stringify(canonical)});</script>
@@ -74,6 +90,7 @@ export const handler = async (event) => {
   <noscript>
     <a href="${canonical}">Continue to article</a>
   </noscript>
+  ${isDevelopment ? '<div style="position: fixed; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 10px; border-radius: 5px; font-family: Arial; font-size: 12px; z-index: 9999;">Development Mode - OG Preview</div>' : ''}
 </body>
 </html>`;
 

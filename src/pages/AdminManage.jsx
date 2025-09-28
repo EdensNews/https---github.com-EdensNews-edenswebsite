@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useLanguage } from '@/components/LanguageContext';
@@ -40,9 +40,9 @@ function AdminManageContent() {
 
     useEffect(() => {
         fetchArticles();
-    }, []);
+    }, [fetchArticles]);
 
-    const fetchArticles = async () => {
+    const fetchArticles = useCallback(async () => {
         setIsLoading(true);
         try {
             const fetchedArticles = await articlesRepo.list({ limit: 50 });
@@ -52,7 +52,7 @@ function AdminManageContent() {
             toast({ title: "Error fetching articles", variant: "destructive" });
         }
         setIsLoading(false);
-    };
+    }, [toast]);
 
     const handleDelete = async (articleId) => {
         try {

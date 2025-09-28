@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { SiteSettings } from '@/api/entities';
 import { User } from '@/api/entities';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';

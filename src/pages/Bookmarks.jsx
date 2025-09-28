@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
 import { Article } from '@/api/entities';
 import { useLanguage } from '@/components/LanguageContext';
@@ -30,7 +30,7 @@ function BookmarksContent() {
             const user = await User.me();
             if (user && user.bookmarks && user.bookmarks.length > 0) {
                 const articles = await Promise.all(
-                    user.bookmarks.map(id => Article.get(id).catch(e => null))
+                    user.bookmarks.map(id => Article.get(id).catch(() => null))
                 );
                 setBookmarkedArticles(articles.filter(Boolean)); // Filter out nulls if an article was deleted
             } else {

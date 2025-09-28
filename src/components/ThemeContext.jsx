@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { User } from '@/api/user';
 
 const ThemeContext = createContext();
@@ -29,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
                     }
                 }
             }
-        } catch (error) {
+        } catch {
             // User not logged in, check localStorage
             const savedTheme = localStorage.getItem('preferred_theme');
             if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
@@ -82,3 +83,7 @@ export const ThemeProvider = ({ children }) => {
 };
 
 export const useTheme = () => useContext(ThemeContext);
+
+ThemeProvider.propTypes = {
+    children: PropTypes.node.isRequired
+};

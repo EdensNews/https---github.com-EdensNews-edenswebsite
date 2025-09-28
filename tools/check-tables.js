@@ -2,6 +2,7 @@
 /*
   Script to check existing table structure in Supabase
 */
+/* eslint-env node */
 
 // Load environment variables
 import dotenv from 'dotenv'

@@ -1,15 +1,16 @@
 
 
-import React from "react";
+import { useEffect } from "react";
+import PropTypes from 'prop-types';
 import { LanguageProvider } from "../components/LanguageContext";
 import Header from "../components/news/Header";
 import BreakingMarquee from "../components/news/BreakingMarquee";
 import Footer from "../components/news/Footer";
 import { Toaster } from "@/components/ui/toaster";
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout({ children }) {
   // Set dark theme by default
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
@@ -171,4 +172,8 @@ export default function Layout({ children, currentPageName }) {
     </LanguageProvider>
   );
 }
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired
+};
 

@@ -35,7 +35,7 @@ export const User = {
     let profile = null
     try {
       profile = await getUserProfile(user.id)
-    } catch (_) {
+    } catch {
       // ignore if profile missing
     }
     return {

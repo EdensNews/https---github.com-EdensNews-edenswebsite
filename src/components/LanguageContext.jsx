@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { User } from '@/api/user';
 
 const LanguageContext = createContext();
@@ -41,7 +42,7 @@ export const LanguageProvider = ({ children }) => {
                     }
                 }
             }
-        } catch (error) {
+        } catch {
             // User not logged in, check localStorage
             const savedLang = localStorage.getItem('preferred_language');
             if (savedLang && (savedLang === 'kn' || savedLang === 'en')) {
@@ -90,3 +91,7 @@ export const LanguageProvider = ({ children }) => {
 };
 
 export const useLanguage = () => useContext(LanguageContext);
+
+LanguageProvider.propTypes = {
+    children: PropTypes.node.isRequired
+};

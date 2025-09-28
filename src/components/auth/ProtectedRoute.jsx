@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { User } from '@/api/user';
 import { useLanguage } from '@/components/LanguageContext';
 import { Shield, AlertTriangle } from 'lucide-react';
@@ -14,9 +15,9 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
 
     useEffect(() => {
         checkAuthentication();
-    }, []);
+    }, [checkAuthentication]);
 
-    const checkAuthentication = async () => {
+    const checkAuthentication = useCallback(async () => {
         setIsLoading(true);
         try {
             const currentUser = await User.me();
@@ -27,12 +28,12 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
             if (requireAdmin && currentUser.role !== 'admin') {
                 setIsAuthenticated(false);
             }
-        } catch (error) {
+        } catch {
             setIsAuthenticated(false);
             setUser(null);
         }
         setIsLoading(false);
-    };
+    }, [requireAdmin]);
 
     const handleLogin = async () => {
         try {
@@ -111,3 +112,8 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
 
     return children;
 }
+
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    requireAdmin: PropTypes.bool
+};

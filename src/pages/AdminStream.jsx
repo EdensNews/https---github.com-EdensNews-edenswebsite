@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { streamSettingsRepo } from '@/api/repos/streamSettingsRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Save, Radio, Copy, Eye, ArrowLeft, Youtube } from 'lucide-react';
+import { Save, Radio, Eye, ArrowLeft, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useToast } from '@/components/ui/use-toast';

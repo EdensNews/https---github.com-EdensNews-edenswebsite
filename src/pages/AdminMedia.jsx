@@ -118,7 +118,7 @@ function AdminMediaContent() {
                     return `https://www.youtube.com/embed/${videoId}`;
                 }
             }
-        } catch (e) {
+        } catch {
             // Not a valid URL or not YouTube
         }
         return null;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
@@ -37,29 +36,34 @@ export default function ArticleCard({ article }) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Use the same URL structure as the actual route
-        const url = `${window.location.origin}/articledetail?id=${article.id}`;
+        // Determine the best URL to use for sharing
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const regularUrl = `${window.location.origin}/articledetail?id=${article.id}`;
+        
+        // For localhost, use regular URL. For production, use OG URL for better previews
+        const shareUrl = isLocalhost ? regularUrl : `${window.location.origin}/.netlify/functions/share-og?id=${article.id}`;
         
         // Create a more comprehensive share text that works across platforms
         const shareText = `${title}
 
-${url}
+${shareUrl}
 
 Shared from Edens News`;
         
-        // Strategy 1: Try text-only sharing first (this ensures text is always visible)
+        // Strategy 1: Try sharing with the appropriate URL
         if (navigator.share) {
             try {
                 await navigator.share({ 
                     title: title,
                     text: shareText,
-                    url: url
+                    url: shareUrl
                 });
-                toast({ title: "Article shared!", duration: 3000 });
+                const message = isLocalhost ? "Article shared!" : "Article shared with preview!";
+                toast({ title: message, duration: 3000 });
                 return;
             } catch (err) {
-                // User cancelled or other error, continue to file sharing
-                console.warn('Text-only share failed:', err);
+                // User cancelled or other error, continue to other strategies
+                console.warn('Share failed:', err);
             }
         }
         
@@ -67,31 +71,49 @@ Shared from Edens News`;
         const imageUrl = article.image_url;
         if (imageUrl && navigator.canShare && navigator.share) {
             try {
-                // Fetch the full-size image
-                const response = await fetch(imageUrl, { mode: 'cors' });
-                if (response.ok) {
+                // First try to fetch the image with CORS
+                let response;
+                try {
+                    response = await fetch(imageUrl, { 
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+                } catch (corsError) {
+                    console.warn('CORS fetch failed, trying no-cors approach:', corsError);
+                    // Try using no-cors mode
+                    response = await fetch(imageUrl, { 
+                        mode: 'no-cors'
+                    });
+                }
+                
+                if (response && response.ok) {
                     const blob = await response.blob();
                     
-                    // Generate thumbnail using HTML5 Canvas
-                    const thumbnailBlob = await generateThumbnail(blob, 400, 400);
-                    
-                    const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
-                    // Preserve the original file extension
-                    const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
-                    const safeName = `thumbnail_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
-                    const file = new File([thumbnailBlob], safeName, { type: thumbnailBlob.type || 'image/jpeg' });
-                    
-                    const shareData = {
-                        title: title,
-                        text: shareText,
-                        url: url,
-                        files: [file]
-                    };
-                    
-                    if (navigator.canShare(shareData)) {
-                        await navigator.share(shareData);
-                        toast({ title: "Article shared with thumbnail!", duration: 3000 });
-                        return;
+                    // Check if blob is valid
+                    if (blob.size > 0) {
+                        // Generate thumbnail using HTML5 Canvas
+                        const thumbnailBlob = await generateThumbnail(blob, 400, 400);
+                        
+                        if (thumbnailBlob) {
+                            const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
+                            // Preserve the original file extension
+                            const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
+                            const safeName = `thumbnail_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
+                            const file = new File([thumbnailBlob], safeName, { type: thumbnailBlob.type || 'image/jpeg' });
+                            
+                            const shareData = {
+                                title: title,
+                                text: shareText,
+                                url: url,
+                                files: [file]
+                            };
+                            
+                            if (navigator.canShare(shareData)) {
+                                await navigator.share(shareData);
+                                toast({ title: "Article shared with thumbnail!", duration: 3000 });
+                                return;
+                            }
+                        }
                     }
                 }
             } catch (err) {
@@ -113,40 +135,66 @@ Shared from Edens News`;
     const generateThumbnail = (blob, maxWidth, maxHeight) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = 'anonymous'; // Enable CORS for images
+            
             img.onload = () => {
-                // Create canvas
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Calculate dimensions maintaining aspect ratio
-                let { width, height } = img;
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
+                try {
+                    // Create canvas
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (!ctx) {
+                        reject(new Error('Canvas context not available'));
+                        return;
                     }
-                } else {
-                    if (height > maxHeight) {
-                        width = (width * maxHeight) / height;
-                        height = maxHeight;
+                    
+                    // Calculate dimensions maintaining aspect ratio
+                    let { width, height } = img;
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = (width * maxHeight) / height;
+                            height = maxHeight;
+                        }
                     }
+                    
+                    // Set canvas dimensions
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Draw image on canvas
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to blob
+                    canvas.toBlob((result) => {
+                        if (result) {
+                            resolve(result);
+                        } else {
+                            reject(new Error('Failed to create thumbnail blob'));
+                        }
+                    }, 'image/jpeg', 0.8);
+                } catch (error) {
+                    reject(error);
                 }
-                
-                // Set canvas dimensions
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Draw image on canvas
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to blob
-                canvas.toBlob(resolve, 'image/jpeg', 0.8);
             };
             
-            img.onerror = reject;
+            img.onerror = (error) => {
+                console.warn('Image load error:', error);
+                reject(new Error('Failed to load image for thumbnail generation'));
+            };
             
             // Load image from blob
-            img.src = URL.createObjectURL(blob);
+            const objectUrl = URL.createObjectURL(blob);
+            img.src = objectUrl;
+            
+            // Clean up object URL after a delay
+            setTimeout(() => {
+                URL.revokeObjectURL(objectUrl);
+            }, 10000);
         });
     };
 

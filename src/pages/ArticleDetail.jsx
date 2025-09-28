@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { bookmarksRepo } from '@/api/repos/bookmarksRepo';
@@ -61,20 +61,17 @@ export default function ArticleDetail() {
                     await bookmarksRepo.remove(user.id, article.id);
                     setIsBookmarked(false);
                 } else {
-                    await bookmarksRepo.add(user.id, article.id);
                     setIsBookmarked(true);
                 }
             } catch (error) {
                 console.error("Failed to update bookmarks", error);
             }
-;
-
+        };
     const handleShare = async () => {
         const title = language === 'kn' ? (article.title_kn || article.title_en) : (article.title_en || article.title_kn);
         // Use consistent URL structure
         const url = `${window.location.origin}/articledetail?id=${articleId}`;
         const shareText = `${title}
-
 ${url}
 
 Shared from Edens News`;
@@ -84,7 +81,7 @@ Shared from Edens News`;
             try {
                 await navigator.share({ title, text: shareText, url });
                 return;
-            } catch (_) { /* user cancelled */ }
+            } catch { /* user cancelled */ }
         }
         // Final fallback: copy to clipboard
         try {
@@ -94,46 +91,7 @@ Shared from Edens News`;
         }
     };
     
-    // Helper function to generate thumbnail using HTML5 Canvas
-    const generateThumbnail = (blob, maxWidth, maxHeight) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                // Create canvas
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Calculate dimensions maintaining aspect ratio
-                let { width, height } = img;
-                if (width > height) {
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
-                } else {
-                    if (height > maxHeight) {
-                        width = (width * maxHeight) / height;
-                        height = maxHeight;
-                    }
-                }
-                
-                // Set canvas dimensions
-                canvas.width = width;
-                canvas.height = height;
-                
-                // Draw image on canvas
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // Convert to blob
-                canvas.toBlob(resolve, 'image/jpeg', 0.8);
-            };
-            
-            img.onerror = reject;
-            
-            // Load image from blob
-            img.src = URL.createObjectURL(blob);
-        });
-    };
+    // (removed unused generateThumbnail helper)
     
     if (isLoading) {
         return (

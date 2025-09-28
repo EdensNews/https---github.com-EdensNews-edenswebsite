@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { mediaRepo } from '@/api/repos/mediaRepo';
 import { categoriesRepo } from '@/api/repos/categoriesRepo';
@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Save, Languages, Upload, ArrowLeft, Link as LinkIcon, Image, Video, Copy, Plus, Youtube } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';

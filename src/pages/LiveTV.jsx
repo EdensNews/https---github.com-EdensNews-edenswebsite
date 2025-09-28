@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { streamSettingsRepo } from '@/api/repos/streamSettingsRepo';
 import { useLanguage } from '@/components/LanguageContext';
-import { Tv, Signal, AlertCircle, Youtube } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tv, Signal, Youtube } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LiveTV() {
