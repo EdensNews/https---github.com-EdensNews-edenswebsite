@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Article } from '@/api/entities';
-import { User } from '@/api/entities';
+import { articlesRepo } from '@/api/repos/articlesRepo';
+import { analyticsRepo } from '@/api/repos/analyticsRepo';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useLanguage } from '@/components/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +25,10 @@ export default function AdminAnalytics() {
 function AdminAnalyticsContent() {
     const [stats, setStats] = useState({ totalArticles: 0, totalViews: 0, totalUsers: 0 });
     const [categoryData, setCategoryData] = useState([]);
+    const [topArticles, setTopArticles] = useState([]);
+    const [topChartData, setTopChartData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [debug, setDebug] = useState({ envOk: false, articles: 0, viewsTableCount: 0, recent: [] });
     const { language } = useLanguage();
 
     useEffect(() => {
@@ -34,16 +38,37 @@ function AdminAnalyticsContent() {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [articles, users] = await Promise.all([Article.list('', 1000), User.list()]);
+            // Try Supabase repo first (this is what the site uses in production)
+            let articles = [];
+            try {
+                articles = await articlesRepo.list({ limit: 1000 });
+            } catch {}
+            // Fallback to Base44 entities if Supabase is not configured
+            if (!Array.isArray(articles) || articles.length === 0) {
+                try {
+                    articles = await Article.list('', 1000);
+                } catch {
+                    articles = [];
+                }
+            }
+            // Derive distinct users from views (fallback metric)
+            const distinctUsers = await analyticsRepo.countDistinctUsers();
             
             const totalArticles = articles.length;
-            const totalViews = articles.reduce((sum, art) => sum + (art.views || 0), 0);
-            const totalUsers = users.length;
+            // Compute views from article_views table
+            let totalViews = 0;
+            let counts = {};
+            try {
+                counts = await analyticsRepo.getViewCounts(articles.map(a => a.id));
+                totalViews = Object.values(counts).reduce((sum, n) => sum + (Number(n) || 0), 0);
+            } catch {}
+            const totalUsers = distinctUsers;
             
             setStats({ totalArticles, totalViews, totalUsers });
             
             const categories = articles.reduce((acc, article) => {
-                acc[article.category] = (acc[article.category] || 0) + 1;
+                const key = article.category || 'uncategorized';
+                acc[key] = (acc[key] || 0) + 1;
                 return acc;
             }, {});
             
@@ -52,6 +77,32 @@ function AdminAnalyticsContent() {
                 .sort((a, b) => b.count - a.count);
 
             setCategoryData(chartData);
+
+            // Build top articles list from counts
+            const withViews = articles.map(a => ({
+                id: a.id,
+                title: a.title_en || a.title_kn || '—',
+                category: a.category || '-',
+                views: counts[a.id] || 0
+            }));
+            withViews.sort((a, b) => b.views - a.views);
+            setTopArticles(withViews);
+
+            // Chart data for top 10 articles
+            const top10 = withViews.slice(0, 10).map(item => ({
+                name: item.title.length > 30 ? item.title.slice(0, 27) + '…' : item.title,
+                views: item.views
+            }));
+            setTopChartData(top10);
+
+            // Debug panel: show env and recent rows to diagnose empty UI
+            try {
+                const totalViewRows = await analyticsRepo.countAll();
+                const recent = await analyticsRepo.listRecent(5);
+                setDebug({ envOk: true, articles: articles.length, viewsTableCount: totalViewRows, recent });
+            } catch {
+                setDebug(prev => ({ ...prev, envOk: false }));
+            }
 
         } catch (error) {
             console.error("Failed to fetch analytics data:", error);
@@ -111,6 +162,59 @@ function AdminAnalyticsContent() {
                     )}
                 </CardContent>
             </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2 mt-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{language === 'kn' ? 'ಟಾಪ್ ಲೇಖನಗಳು (ವೀಕ್ಷಣೆಗಳು)' : 'Top Articles (Views)'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? <Skeleton className="w-full h-80" /> : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm">
+                                    <thead>
+                                        <tr className="text-left text-gray-500">
+                                            <th className="py-2 pr-4">#</th>
+                                            <th className="py-2 pr-4">{language === 'kn' ? 'ಶೀರ್ಷಿಕೆ' : 'Title'}</th>
+                                            <th className="py-2 pr-4 hidden md:table-cell">{language === 'kn' ? 'ವರ್ಗ' : 'Category'}</th>
+                                            <th className="py-2 pr-4">{language === 'kn' ? 'ವೀಕ್ಷಣೆಗಳು' : 'Views'}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {topArticles.slice(0, 25).map((a, idx) => (
+                                            <tr key={a.id} className="border-t border-gray-100 dark:border-gray-800">
+                                                <td className="py-2 pr-4">{idx + 1}</td>
+                                                <td className="py-2 pr-4">{a.title}</td>
+                                                <td className="py-2 pr-4 hidden md:table-cell">{a.category || '-'}</td>
+                                                <td className="py-2 pr-4 font-medium">{a.views.toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{language === 'kn' ? 'ಟಾಪ್ 10 ಲೇಖನಗಳು (ಚಾರ್ಟ್)' : 'Top 10 Articles (Chart)'}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? <Skeleton className="w-full h-80" /> : (
+                            <ResponsiveContainer width="100%" height={400}>
+                                <BarChart data={topChartData} margin={{ top: 5, right: 30, left: 10, bottom: 40 }}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" angle={-30} textAnchor="end" interval={0} height={60} />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="views" fill="#10b981" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

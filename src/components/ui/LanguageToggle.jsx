@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 export default function LanguageToggle() {
-    const { language, toggleLanguage, isLoading } = useLanguage();
+    const { language, setLanguage, isLoading, supportedLanguages } = useLanguage();
 
     if (isLoading) {
         return (
@@ -14,18 +14,19 @@ export default function LanguageToggle() {
     }
 
     return (
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleLanguage} 
-            className="rounded-full w-10 h-10 hover:bg-orange-100 transition-colors"
-            aria-label="Toggle language"
-        >
-            {language === 'kn' ? (
-                <span className="font-kannada text-lg font-bold text-orange-600">ಕ</span>
-            ) : (
-                <span className="text-lg font-bold text-orange-600">EN</span>
-            )}
-        </Button>
+        <div className="relative">
+            <select
+                aria-label="Select language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="bg-transparent text-orange-600 border border-orange-300 rounded-md px-2 py-1 text-xs focus:outline-none hover:bg-orange-50/10"
+            >
+                {supportedLanguages.map((lng) => (
+                    <option key={lng} value={lng} className="bg-gray-900 text-white">
+                        {lng.toUpperCase()}
+                    </option>
+                ))}
+            </select>
+        </div>
     );
 }

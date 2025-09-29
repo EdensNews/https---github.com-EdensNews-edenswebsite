@@ -3,6 +3,48 @@ import { supabase } from '@/api/supabaseClient'
 const TABLE = 'article_views'
 
 export const analyticsRepo = {
+  async countAll() {
+    try {
+      const { count, error } = await supabase
+        .from(TABLE)
+        .select('*', { count: 'exact', head: true })
+      if (error) throw error
+      return count || 0
+    } catch (error) {
+      console.error('Failed to count views:', error)
+      return 0
+    }
+  },
+
+  async listRecent(limit = 10) {
+    try {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('*')
+        .order('viewed_at', { ascending: false })
+        .limit(limit)
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Failed to list recent views:', error)
+      return []
+    }
+  },
+
+  async countDistinctUsers() {
+    try {
+      const { data, error } = await supabase
+        .from(TABLE)
+        .select('user_id')
+        .not('user_id', 'is', null)
+      if (error) throw error
+      const unique = new Set((data || []).map(r => r.user_id))
+      return unique.size
+    } catch (error) {
+      console.error('Failed to count distinct users:', error)
+      return 0
+    }
+  },
   async trackView(articleId, userId = null) {
     try {
       const { data, error } = await supabase

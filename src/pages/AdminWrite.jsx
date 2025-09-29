@@ -5,7 +5,7 @@ import { mediaRepo } from '@/api/repos/mediaRepo';
 import { categoriesRepo } from '@/api/repos/categoriesRepo';
 import { articleCategoriesRepo } from '@/api/repos/articleCategoriesRepo';
 import { useLanguage } from '@/components/LanguageContext';
-import { InvokeLLM } from '@/api/integrations';
+import { InvokeLLM } from '@/api/llm';
 import { detectLanguage, getTranslationDirection } from '@/utils/languageDetection';
 import { supabase } from '@/api/supabaseClient';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -37,8 +37,11 @@ export default function AdminWrite() {
 function AdminWriteContent() {
     const [article, setArticle] = useState({
         title_kn: '', title_en: '', content_kn: '', content_en: '',
+        title_ta: '', title_te: '', title_hi: '', title_ml: '',
+        content_ta: '', content_te: '', content_hi: '', content_ml: '',
         category: '', reporter: '', image_url: '', is_breaking: false
     });
+    const [translated, setTranslated] = useState({ en: null, ta: null, te: null, hi: null, ml: null });
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [mediaItems, setMediaItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -72,12 +75,20 @@ function AdminWriteContent() {
                         throw new Error('Article not found');
                     }
 
-                    const normalized = {
+            const normalized = {
                         ...existingArticle,
                         title_kn: existingArticle.title_kn || existingArticle.title || existingArticle.headline || '',
                         title_en: existingArticle.title_en || '',
+                title_ta: existingArticle.title_ta || '',
+                title_te: existingArticle.title_te || '',
+                title_hi: existingArticle.title_hi || '',
+                title_ml: existingArticle.title_ml || '',
                         content_kn: existingArticle.content_kn || existingArticle.content || '',
                         content_en: existingArticle.content_en || '',
+                content_ta: existingArticle.content_ta || '',
+                content_te: existingArticle.content_te || '',
+                content_hi: existingArticle.content_hi || '',
+                content_ml: existingArticle.content_ml || '',
                         reporter: existingArticle.reporter || existingArticle.author || existingArticle.reporter_name || existingArticle.author_name || existingArticle.reported_by || existingArticle.writer || existingArticle.editor || '',
                         image_url: existingArticle.image_url || existingArticle.image || existingArticle.thumbnail_url || existingArticle.cover_image || '',
                     };
@@ -97,11 +108,13 @@ function AdminWriteContent() {
                     }
                 } else if (rssItem) {
                     // Handle RSS item import
-                    const rssArticle = {
+            const rssArticle = {
                         title_kn: rssItem.title || '',
                         title_en: '', // Will be translated if needed
+                title_ta: '', title_te: '', title_hi: '', title_ml: '',
                         content_kn: rssItem.description || '',
                         content_en: '', // Will be translated if needed
+                content_ta: '', content_te: '', content_hi: '', content_ml: '',
                         reporter: 'RSS Import',
                         image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || '',
                         category: 'rss', // RSS category
@@ -133,10 +146,10 @@ function AdminWriteContent() {
                                     });
                                     setArticle(prev => ({ 
                                         ...prev, 
-                                        title_kn: translationResult.title_kn, 
+                                        title_kn: translationResult.title_kn || rssItem.title || prev.title_kn, 
                                         content_kn: translationResult.content_kn,
-                                        title_en: rssItem.title, // Keep original English
-                                        content_en: rssItem.description || ''
+                                        title_en: rssItem.title || prev.title_en,
+                                        content_en: rssItem.description || prev.content_en || ''
                                     }));
                                     toast({ title: `RSS article imported and translated (${translationInfo.direction})` });
                                 } else {
@@ -147,9 +160,9 @@ function AdminWriteContent() {
                                     });
                                     setArticle(prev => ({ 
                                         ...prev, 
-                                        title_kn: rssItem.title, // Keep original Kannada
-                                        content_kn: rssItem.description || '',
-                                        title_en: translationResult.title_en,
+                                        title_kn: rssItem.title || prev.title_kn, 
+                                        content_kn: rssItem.description || prev.content_kn || '',
+                                        title_en: translationResult.title_en || prev.title_en,
                                         content_en: translationResult.content_en
                                     }));
                                     toast({ title: `RSS article imported and translated (${translationInfo.direction})` });
@@ -265,6 +278,7 @@ function AdminWriteContent() {
                 response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
             });
             setArticle(prev => ({ ...prev, title_en: translationResult.title_en, content_en: translationResult.content_en }));
+            setTranslated(prev => ({ ...prev, en: { title: translationResult.title_en, content: translationResult.content_en } }));
             toast({ title: "Translation to English completed successfully" });
         } catch (error) {
             console.error('Translation failed:', error);
@@ -289,6 +303,127 @@ function AdminWriteContent() {
         } catch (error) {
             console.error('Translation failed:', error);
             toast({ title: "Translation failed. Please try again.", variant: "destructive" });
+        }
+        setIsTranslating(false);
+    };
+
+    // Title-only translators
+    const handleTranslateTitleToEnglish = async () => {
+        if (!article.title_kn) {
+            toast({ title: "Enter Kannada title first", variant: "destructive" });
+            return;
+        }
+        setIsTranslating(true);
+        try {
+            const res = await InvokeLLM({
+                prompt: `Translate ONLY the following Kannada news headline to English. Return strict JSON: {"title_en":"..."}. Title: ${article.title_kn}`,
+                response_json_schema: { type: 'object', properties: { title_en: { type: 'string' } } }
+            });
+            setArticle(prev => ({ ...prev, title_en: res.title_en || prev.title_en || '' }));
+            toast({ title: "Title translated to English" });
+        } catch (e) {
+            console.error('Title translation failed:', e);
+            toast({ title: "Failed to translate title", variant: 'destructive' });
+        }
+        setIsTranslating(false);
+    };
+
+    const handleTranslateTitleToKannada = async () => {
+        if (!article.title_en) {
+            toast({ title: "Enter English title first", variant: "destructive" });
+            return;
+        }
+        setIsTranslating(true);
+        try {
+            const res = await InvokeLLM({
+                prompt: `Translate ONLY the following English news headline to Kannada. Return strict JSON: {"title_kn":"..."}. Title: ${article.title_en}`,
+                response_json_schema: { type: 'object', properties: { title_kn: { type: 'string' } } }
+            });
+            setArticle(prev => ({ ...prev, title_kn: res.title_kn || prev.title_kn || '' }));
+            toast({ title: "Title translated to Kannada" });
+        } catch (e) {
+            console.error('Title translation failed:', e);
+            toast({ title: "Failed to translate title", variant: 'destructive' });
+        }
+        setIsTranslating(false);
+    };
+
+    const translateTitleToTarget = async (target) => {
+        const names = { ta: 'Tamil', te: 'Telugu', hi: 'Hindi', ml: 'Malayalam' };
+        const targetName = names[target] || 'Tamil';
+        const hasEnglish = !!article.title_en;
+        const sourceTitle = hasEnglish ? article.title_en : article.title_kn;
+        if (!sourceTitle) {
+            toast({ title: hasEnglish ? 'Enter English title first' : 'Enter Kannada title first', variant: 'destructive' });
+            return;
+        }
+        setIsTranslating(true);
+        try {
+            const res = await InvokeLLM({
+                prompt: `Translate ONLY the following ${hasEnglish ? 'English' : 'Kannada'} news headline to ${targetName}. Return strict JSON: {"title":"..."}. Title: ${sourceTitle}`,
+                response_json_schema: { type: 'object', properties: { title: { type: 'string' } } }
+            });
+            setArticle(prev => ({ ...prev, [`title_${target}`]: res.title || prev[`title_${target}`] || '' }));
+            toast({ title: `Title translated to ${targetName}` });
+        } catch (e) {
+            console.error('Title translation failed:', e);
+            toast({ title: `Failed to translate title to ${targetName}`, variant: 'destructive' });
+        }
+        setIsTranslating(false);
+    };
+
+    const translateToTarget = async (target, { suppressSpinner = false } = {}) => {
+        const map = { ta: 'Tamil', te: 'Telugu', hi: 'Hindi', ml: 'Malayalam' };
+        const targetName = map[target] || 'Tamil';
+        const hasEnglish = !!(article.title_en && article.content_en);
+        const srcTitle = hasEnglish ? article.title_en : article.title_kn;
+        const srcContent = hasEnglish ? article.content_en : article.content_kn;
+        if (!srcTitle || !srcContent) {
+            toast({ title: hasEnglish ? "Please enter English title and content first" : "Please enter Kannada title and content first", variant: "destructive" });
+            return;
+        }
+        if (!suppressSpinner) setIsTranslating(true);
+        try {
+            const prompt = `Translate the following ${hasEnglish ? 'English' : 'Kannada'} news article to ${targetName}. Maintain journalistic style and accuracy. Preserve HTML formatting, image tags, and video embeds. Return strict JSON: {"title": "...", "content": "..."}. Title: ${srcTitle}. Content: ${srcContent}`;
+            const result = await InvokeLLM({
+                prompt,
+                response_json_schema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } } }
+            });
+            setTranslated(prev => ({ ...prev, [target]: { title: result.title, content: result.content } }));
+            // Persist into article fields so it saves
+            setArticle(prev => ({
+                ...prev,
+                [`title_${target}`]: result.title,
+                [`content_${target}`]: result.content
+            }));
+            toast({ title: `Translated to ${targetName}` });
+        } catch (e) {
+            console.error('Translation failed:', e);
+            toast({ title: `Failed to translate to ${targetName}`, variant: 'destructive' });
+        }
+        if (!suppressSpinner) setIsTranslating(false);
+    };
+
+    const translateAll = async () => {
+        setIsTranslating(true);
+        // Ensure English exists if source is Kannada
+        try {
+            if (!article.title_en || !article.content_en) {
+                if (article.title_kn && article.content_kn) {
+                    const resEn = await InvokeLLM({
+                        prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve HTML formatting. Return strict JSON: {"title_en":"...","content_en":"..."}. Title: ${article.title_kn}. Content: ${article.content_kn}`,
+                        response_json_schema: { type: 'object', properties: { title_en: { type: 'string' }, content_en: { type: 'string' } } }
+                    });
+                    setArticle(prev => ({ ...prev, title_en: resEn.title_en, content_en: resEn.content_en }));
+                }
+            }
+        } catch (e) {
+            console.warn('English translation skipped:', e);
+        }
+        const targets = ['ta','te','hi','ml'];
+        for (const t of targets) {
+            // eslint-disable-next-line no-await-in-loop
+            await translateToTarget(t, { suppressSpinner: true });
         }
         setIsTranslating(false);
     };
@@ -373,9 +508,37 @@ function AdminWriteContent() {
     };
 
     const handleSave = async () => {
+        // Enforce Kannada headline/content as baseline
         if (!article.title_kn || !article.content_kn || !article.category || !article.image_url) {
-            toast({ title: "Please fill all required fields", variant: "destructive" });
+            toast({ title: "Please fill all required fields (Kannada headline, content, category, image)", variant: "destructive" });
             return;
+        }
+
+        // Ensure English headline exists; auto-translate if missing
+        try {
+            if (!article.title_en || !article.content_en) {
+                const translationResult = await InvokeLLM({
+                    prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve any HTML formatting, image tags, and video embeds. Title: ${article.title_kn}. Content: ${article.content_kn}. Provide the translation in this exact JSON format: {"title_en": "English title", "content_en": "English content with preserved HTML formatting"}`,
+                    response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
+                });
+                setArticle(prev => ({ ...prev, title_en: prev.title_en || translationResult.title_en || '', content_en: prev.content_en || translationResult.content_en || '' }));
+            }
+        } catch (autoEnErr) {
+            console.warn('Auto English translation skipped:', autoEnErr?.message || autoEnErr);
+        }
+
+        // Validate that for any filled non-stored language content, the headline is present
+        const nonStored = [
+            { code: 'ta', title: article.title_ta, content: article.content_ta },
+            { code: 'te', title: article.title_te, content: article.content_te },
+            { code: 'hi', title: article.title_hi, content: article.content_hi },
+            { code: 'ml', title: article.title_ml, content: article.content_ml },
+        ];
+        for (const lang of nonStored) {
+            if ((lang.content && !lang.title) || (lang.title && !lang.content)) {
+                toast({ title: `Please complete both title and content for ${lang.code.toUpperCase()}`, variant: 'destructive' });
+                return;
+            }
         }
         setIsSaving(true);
         try {
@@ -411,8 +574,16 @@ function AdminWriteContent() {
             const payload = {
                 title_kn: article.title_kn,
                 title_en: article.title_en || null,
+                title_ta: article.title_ta || null,
+                title_te: article.title_te || null,
+                title_hi: article.title_hi || null,
+                title_ml: article.title_ml || null,
                 content_kn: article.content_kn,
                 content_en: article.content_en || null,
+                content_ta: article.content_ta || null,
+                content_te: article.content_te || null,
+                content_hi: article.content_hi || null,
+                content_ml: article.content_ml || null,
                 reporter: article.reporter || null,
                 image_url: article.image_url,
                 is_breaking: !!article.is_breaking,
@@ -682,11 +853,54 @@ function AdminWriteContent() {
                                     <Languages className="w-4 h-4 mr-2" />
                                     {isTranslating ? 'Translating...' : 'To English'}
                                 </Button>
+                                <Button 
+                                    onClick={() => translateToTarget('ta')} 
+                                    disabled={isTranslating || !(article.title_kn && article.content_kn) && !(article.title_en && article.content_en)} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {isTranslating ? '...' : 'To Tamil'}
+                                </Button>
+                                <Button 
+                                    onClick={() => translateToTarget('te')} 
+                                    disabled={isTranslating || !(article.title_kn && article.content_kn) && !(article.title_en && article.content_en)} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {isTranslating ? '...' : 'To Telugu'}
+                                </Button>
+                                <Button 
+                                    onClick={() => translateToTarget('hi')} 
+                                    disabled={isTranslating || !(article.title_kn && article.content_kn) && !(article.title_en && article.content_en)} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {isTranslating ? '...' : 'To Hindi'}
+                                </Button>
+                                <Button 
+                                    onClick={() => translateToTarget('ml')} 
+                                    disabled={isTranslating || !(article.title_kn && article.content_kn) && !(article.title_en && article.content_en)} 
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    {isTranslating ? '...' : 'To Malayalam'}
+                                </Button>
+                                <Button 
+                                    onClick={translateAll}
+                                    disabled={isTranslating || (!article.title_kn && !article.title_en)}
+                                    className="bg-orange-600 hover:bg-orange-700"
+                                    size="sm"
+                                >
+                                    {isTranslating ? 'Translating…' : 'Translate All'}
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <Label className="font-kannada dark:text-gray-300">ಶೀರ್ಷಿಕೆ</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label className="font-kannada dark:text-gray-300">ಶೀರ್ಷಿಕೆ</Label>
+                                    <Button size="sm" variant="outline" onClick={handleTranslateTitleToEnglish} disabled={isTranslating || !article.title_kn}>Title → EN</Button>
+                                </div>
                                 <Input 
                                     value={article.title_kn} 
                                     onChange={(e) => setArticle({...article, title_kn: e.target.value})} 
@@ -698,7 +912,7 @@ function AdminWriteContent() {
                                 <Label className="font-kannada dark:text-gray-300">ವಿಷಯ</Label>
                                 <QuillEditor 
                                     value={article.content_kn} 
-                                    onChange={(value) => setArticle({...article, content_kn: value})} 
+                                    onChange={(value) => setArticle({ ...article, content_kn: value })} 
                                     className="dark:text-white" 
                                     placeholder="ಇಲ್ಲಿ ಕನ್ನಡದಲ್ಲಿ ಲೇಖನ ಬರೆಯಿರಿ..."
                                 />
@@ -723,7 +937,10 @@ function AdminWriteContent() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <Label className="dark:text-gray-300">Title</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label className="dark:text-gray-300">Title</Label>
+                                    <Button size="sm" variant="outline" onClick={handleTranslateTitleToKannada} disabled={isTranslating || !article.title_en}>Title → KN</Button>
+                                </div>
                                 <Input 
                                     value={article.title_en || ''} 
                                     onChange={(e) => setArticle({...article, title_en: e.target.value})} 
@@ -734,10 +951,102 @@ function AdminWriteContent() {
                                 <Label className="dark:text-gray-300">Content</Label>
                                 <QuillEditor 
                                     value={article.content_en || ''} 
-                                    onChange={(value) => setArticle({...article, content_en: value})} 
+                                    onChange={(value) => setArticle({ ...article, content_en: value })} 
                                     className="dark:text-white" 
                                     placeholder="Write English article content here..."
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Other Languages */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="dark:text-gray-200">Other Languages</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Tamil */}
+                            <div className="space-y-3">
+                                <Label className="dark:text-gray-300">Tamil Title</Label>
+                                <div className="flex gap-2">
+                                    <Input 
+                                        value={article.title_ta}
+                                        onChange={(e) => setArticle({ ...article, title_ta: e.target.value })}
+                                        placeholder="Tamil title"
+                                    />
+                                    <Button size="sm" variant="outline" onClick={() => translateTitleToTarget('ta')} disabled={isTranslating}>↻</Button>
+                                </div>
+                                <Label className="dark:text-gray-300">Tamil Content</Label>
+                                <QuillEditor 
+                                    value={article.content_ta}
+                                    onChange={(value) => setArticle({ ...article, content_ta: value })}
+                                    className="dark:text-white"
+                                    placeholder="Write Tamil article content here..."
+                                />
+                                <div><Button size="sm" variant="outline" onClick={() => translateToTarget('ta')}>Update Tamil via Translate</Button></div>
+                            </div>
+
+                            {/* Telugu */}
+                            <div className="space-y-3">
+                                <Label className="dark:text-gray-300">Telugu Title</Label>
+                                <div className="flex gap-2">
+                                    <Input 
+                                        value={article.title_te}
+                                        onChange={(e) => setArticle({ ...article, title_te: e.target.value })}
+                                        placeholder="Telugu title"
+                                    />
+                                    <Button size="sm" variant="outline" onClick={() => translateTitleToTarget('te')} disabled={isTranslating}>↻</Button>
+                                </div>
+                                <Label className="dark:text-gray-300">Telugu Content</Label>
+                                <QuillEditor 
+                                    value={article.content_te}
+                                    onChange={(value) => setArticle({ ...article, content_te: value })}
+                                    className="dark:text-white"
+                                    placeholder="Write Telugu article content here..."
+                                />
+                                <div><Button size="sm" variant="outline" onClick={() => translateToTarget('te')}>Update Telugu via Translate</Button></div>
+                            </div>
+
+                            {/* Hindi */}
+                            <div className="space-y-3">
+                                <Label className="dark:text-gray-300">Hindi Title</Label>
+                                <div className="flex gap-2">
+                                    <Input 
+                                        value={article.title_hi}
+                                        onChange={(e) => setArticle({ ...article, title_hi: e.target.value })}
+                                        placeholder="Hindi title"
+                                    />
+                                    <Button size="sm" variant="outline" onClick={() => translateTitleToTarget('hi')} disabled={isTranslating}>↻</Button>
+                                </div>
+                                <Label className="dark:text-gray-300">Hindi Content</Label>
+                                <QuillEditor 
+                                    value={article.content_hi}
+                                    onChange={(value) => setArticle({ ...article, content_hi: value })}
+                                    className="dark:text-white"
+                                    placeholder="Write Hindi article content here..."
+                                />
+                                <div><Button size="sm" variant="outline" onClick={() => translateToTarget('hi')}>Update Hindi via Translate</Button></div>
+                            </div>
+
+                            {/* Malayalam */}
+                            <div className="space-y-3">
+                                <Label className="dark:text-gray-300">Malayalam Title</Label>
+                                <div className="flex gap-2">
+                                    <Input 
+                                        value={article.title_ml}
+                                        onChange={(e) => setArticle({ ...article, title_ml: e.target.value })}
+                                        placeholder="Malayalam title"
+                                    />
+                                    <Button size="sm" variant="outline" onClick={() => translateTitleToTarget('ml')} disabled={isTranslating}>↻</Button>
+                                </div>
+                                <Label className="dark:text-gray-300">Malayalam Content</Label>
+                                <QuillEditor 
+                                    value={article.content_ml}
+                                    onChange={(value) => setArticle({ ...article, content_ml: value })}
+                                    className="dark:text-white"
+                                    placeholder="Write Malayalam article content here..."
+                                />
+                                <div><Button size="sm" variant="outline" onClick={() => translateToTarget('ml')}>Update Malayalam via Translate</Button></div>
                             </div>
                         </CardContent>
                     </Card>

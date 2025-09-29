@@ -13,13 +13,14 @@ export default function ArticleCard({ article }) {
     const [viewCount] = useState(article.views || 0);
     
     const title = (() => {
-        if (language === 'kn') {
-            // For Kannada, prefer title_kn, fallback to title_en
-            return article.title_kn || article.title_en || '';
-        } else {
-            // For English, prefer title_en, fallback to title_kn
-            return article.title_en || article.title_kn || '';
-        }
+        // Prefer exact language match, then sensible fallbacks
+        if (language === 'kn') return article.title_kn || article.title_en || article.title_ta || article.title_te || article.title_hi || article.title_ml || '';
+        if (language === 'en') return article.title_en || article.title_kn || article.title_ta || article.title_te || article.title_hi || article.title_ml || '';
+        if (language === 'ta') return article.title_ta || article.title_en || article.title_kn || article.title_te || article.title_hi || article.title_ml || '';
+        if (language === 'te') return article.title_te || article.title_en || article.title_kn || article.title_ta || article.title_hi || article.title_ml || '';
+        if (language === 'hi') return article.title_hi || article.title_en || article.title_kn || article.title_ta || article.title_te || article.title_ml || '';
+        if (language === 'ml') return article.title_ml || article.title_en || article.title_kn || article.title_ta || article.title_te || article.title_hi || '';
+        return article.title_en || article.title_kn || '';
     })();
     const categoryText = language === 'kn' ? article.category : article.category;
 

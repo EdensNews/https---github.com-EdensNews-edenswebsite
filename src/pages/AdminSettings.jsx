@@ -15,6 +15,7 @@ import { Save, Settings, Users, Globe, Shield, ArrowLeft, LogOut, Share2 } from 
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { siteSettingsRepo } from '@/api/repos/siteSettingsRepo';
 
 export default function AdminSettings() {
     return (
@@ -60,10 +61,19 @@ function AdminSettingsContent() {
     const loadData = async () => {
         setIsLoading(true);
         try {
+            // Load cached first for fast UX
+            const cached = localStorage.getItem('cached_site_settings');
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    setSettings(prev => ({ ...prev, ...parsed }));
+                } catch {}
+            }
+
             const [siteSettings, allUsers, user] = await Promise.all([
-                SiteSettings.list('-created_date', 1),
-                User.list(),
-                User.me()
+                SiteSettings.list('-created_date', 1).catch(() => []),
+                User.list().catch(() => []),
+                User.me().catch(() => null)
             ]);
             
             if (siteSettings.length > 0) {
@@ -75,6 +85,24 @@ function AdminSettingsContent() {
                     contact_address_en: siteSettings[0].contact_address_en || '',
                     ai_app_url: siteSettings[0].ai_app_url || '' 
                 }));
+                localStorage.setItem('cached_site_settings', JSON.stringify({
+                    ...siteSettings[0]
+                }));
+            } else {
+                // Fallback to Supabase mirror if Base44 entity empty
+                try {
+                    const latest = await siteSettingsRepo.getLatest();
+                    if (latest) {
+                        setSettings(prev => ({
+                            ...prev,
+                            ...latest,
+                            contact_address_kn: latest.contact_address_kn || '',
+                            contact_address_en: latest.contact_address_en || '',
+                            ai_app_url: latest.ai_app_url || ''
+                        }));
+                        localStorage.setItem('cached_site_settings', JSON.stringify(latest));
+                    }
+                } catch {}
             }
             setUsers(allUsers);
             setCurrentUser(user);
@@ -93,6 +121,11 @@ function AdminSettingsContent() {
             } else {
                 await SiteSettings.create(settings);
             }
+            // Mirror to Supabase table and cache locally for reliability
+            try {
+                await siteSettingsRepo.upsert(settings);
+            } catch {}
+            localStorage.setItem('cached_site_settings', JSON.stringify(settings));
             
             toast({
                 title: language === 'kn' ? 'ಸೇವ್ ಆಗಿದೆ!' : 'Saved!',

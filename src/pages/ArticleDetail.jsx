@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { bookmarksRepo } from '@/api/repos/bookmarksRepo';
 import { analyticsRepo } from '@/api/repos/analyticsRepo';
+import { InvokeLLM } from '@/api/llm';
 import { useLanguage } from '@/components/LanguageContext';
 import { useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -27,6 +28,9 @@ export default function ArticleDetail() {
     const query = useQuery();
     const articleId = query.get('id');
     const { language } = useLanguage();
+    const [translated, setTranslated] = useState({}); // { ta: { title, content }, ... }
+    const [isTranslating, setIsTranslating] = useState(false);
+    const translateAbortRef = useRef(null);
 
     useEffect(() => {
         const fetchArticle = async () => {
@@ -78,6 +82,42 @@ export default function ArticleDetail() {
         checkBookmark();
     }, [user, article]);
 
+    const isStoredLang = (lng) => lng === 'kn' || lng === 'en';
+
+    // On-the-fly translation when selecting non-stored languages (must be before any early returns)
+    useEffect(() => {
+        const run = async () => {
+            if (!article || isStoredLang(language)) return;
+            if (translated[language]) return; // cached
+            setIsTranslating(true);
+            // cancel previous
+            if (translateAbortRef.current) translateAbortRef.current.aborted = true;
+            const token = { aborted: false };
+            translateAbortRef.current = token;
+            try {
+                const sourceIsEn = !!(article.title_en && article.content_en);
+                const srcTitle = sourceIsEn ? (article.title_en || '') : (article.title_kn || '');
+                const srcContent = sourceIsEn ? (article.content_en || '') : (article.content_kn || '');
+                const targetName = ({ ta: 'Tamil', te: 'Telugu', hi: 'Hindi', ml: 'Malayalam' })[language] || 'Tamil';
+                const prompt = `Translate the following ${sourceIsEn ? 'English' : 'Kannada'} news article to ${targetName}. Maintain journalistic style and accuracy. Preserve HTML and formatting, including image tags and embeds. Return strict JSON: {"title": "...", "content": "..."}. Title: ${srcTitle}. Content: ${srcContent}`;
+                const result = await InvokeLLM({ prompt, response_json_schema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } } } });
+                if (token.aborted) return;
+                setTranslated((prev) => ({ ...prev, [language]: { title: result.title || srcTitle, content: result.content || srcContent } }));
+            } catch (e) {
+                if (token.aborted) return;
+                // cache fallback to source to avoid loops
+                setTranslated((prev) => ({ ...prev, [language]: { title: (article.title_en || article.title_kn || ''), content: (article.content_en || article.content_kn || '') } }));
+            } finally {
+                if (!token.aborted) setIsTranslating(false);
+            }
+        };
+        run();
+        // cleanup
+        return () => {
+            if (translateAbortRef.current) translateAbortRef.current.aborted = true;
+        };
+    }, [language, article, translated]);
+
     const handleBookmark = async () => {
         if (!user) return;
             try {
@@ -114,6 +154,16 @@ Shared from Edens News`;
             console.error('Failed to copy to clipboard:', err);
         }
     };
+    const fbHref = (() => {
+        const url = encodeURIComponent(`${window.location.origin}/articledetail?id=${articleId}`);
+        return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    })();
+    const twHref = (() => {
+        const title = language === 'kn' ? (article?.title_kn || article?.title_en || '') : (article?.title_en || article?.title_kn || '');
+        const text = encodeURIComponent(title);
+        const url = encodeURIComponent(`${window.location.origin}/articledetail?id=${articleId}`);
+        return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+    })();
     
     // (removed unused generateThumbnail helper)
     
@@ -132,11 +182,30 @@ Shared from Edens News`;
         return <div className="text-center py-20 dark:text-gray-300">Article not found.</div>;
     }
 
+    
+
     const title = (() => {
+        if (!article) return '';
         if (language === 'kn') return article.title_kn || article.title_en || '';
-        return article.title_en || article.title_kn || '';
+        if (language === 'en') return article.title_en || article.title_kn || '';
+        if (language === 'ta') return article.title_ta || (translated.ta && translated.ta.title) || article.title_en || article.title_kn || '';
+        if (language === 'te') return article.title_te || (translated.te && translated.te.title) || article.title_en || article.title_kn || '';
+        if (language === 'hi') return article.title_hi || (translated.hi && translated.hi.title) || article.title_en || article.title_kn || '';
+        if (language === 'ml') return article.title_ml || (translated.ml && translated.ml.title) || article.title_en || article.title_kn || '';
+        const t = translated[language];
+        return (t && t.title) || article.title_en || article.title_kn || '';
     })();
-    const content = language === 'kn' ? (article.content_kn || article.content_en) : (article.content_en || article.content_kn);
+    const content = (() => {
+        if (!article) return '';
+        if (language === 'kn') return article.content_kn || article.content_en;
+        if (language === 'en') return article.content_en || article.content_kn;
+        if (language === 'ta') return article.content_ta || (translated.ta && translated.ta.content) || (article.content_en || article.content_kn);
+        if (language === 'te') return article.content_te || (translated.te && translated.te.content) || (article.content_en || article.content_kn);
+        if (language === 'hi') return article.content_hi || (translated.hi && translated.hi.content) || (article.content_en || article.content_kn);
+        if (language === 'ml') return article.content_ml || (translated.ml && translated.ml.content) || (article.content_en || article.content_kn);
+        const t = translated[language];
+        return (t && t.content) || (article.content_en || article.content_kn);
+    })();
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
     const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
@@ -146,6 +215,8 @@ Shared from Edens News`;
     const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     
+    // (removed duplicate translation effect to maintain stable hook order)
+
     return (
         <div className="bg-white dark:bg-gray-800">
             <Helmet>
@@ -172,7 +243,7 @@ Shared from Edens News`;
                         <h1 className={`text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>{title}</h1>
                         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-500 dark:text-gray-400">
                            <div className="flex items-center gap-2"><UserIcon className="w-5 h-5" /><span>{article.reporter || '—'}</span></div>
-                           <div className="flex items-center gap-2"><Clock className="w-5 h-5" /><span>{format(new Date(article.created_at || article.created_date), 'MMMM d, yyyy')}</span></div>
+                           <div className="flex items-center gap-2"><Clock className="w-5 h-5" /><span>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'MMMM d, yyyy') : '-'; })()}</span></div>
                         </div>
                     </header>
 
@@ -187,6 +258,12 @@ Shared from Edens News`;
                             <Share2 className="w-5 h-5 mr-2" />
                             Share
                         </Button>
+                        <a href={fbHref} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline">Facebook</Button>
+                        </a>
+                        <a href={twHref} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline">Twitter</Button>
+                        </a>
                         <a href={waHref} target="_blank" rel="noopener noreferrer">
                             <Button variant="outline">WhatsApp</Button>
                             </a>

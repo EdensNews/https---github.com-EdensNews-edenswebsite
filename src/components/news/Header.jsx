@@ -47,6 +47,10 @@ export default function Header() {
   const { language } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const goHome = () => {
+    setIsMobileMenuOpen(false);
+    try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } catch {}
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -110,23 +114,23 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
           {/* Logo */}
-          <Link to={createPageUrl('Home')} className="flex items-center gap-2 sm:gap-3 group">
-            <div className="relative overflow-hidden rounded-lg">
+          <div className="flex items-center gap-2 sm:gap-3 group">
+            <Link to={createPageUrl('Home')} aria-label="Edens News Home" className="relative overflow-hidden rounded-lg" onClick={goHome}>
               <img
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png"
                 alt="Edens News"
                 className="w-8 h-10 sm:w-10 sm:h-12 lg:w-14 lg:h-16 object-contain transform group-hover:scale-110 transition-transform duration-300" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-            </div>
-            <div className="block"> {/* Changed from hidden xs:block */}
+            </Link>
+            <Link to={createPageUrl('Home')} aria-label="Edens News Home" className="block" onClick={goHome}>
               <h1 className="text-base sm:text-lg lg:text-2xl font-extrabold text-transparent bg-gradient-to-r from-red-600 via-red-500 to-yellow-500 bg-clip-text tracking-tight">
                 {language === 'kn' ?
                   <span className="font-kannada">ಈಡೆನ್ಸ್ ನ್ಯೂಸ್</span> :
                   'Edens News'
                 }
               </h1>
-            </div>
-          </Link>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
@@ -235,9 +239,9 @@ export default function Header() {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden w-8 h-8">
-                  <Menu className="w-4 h-4" />
-                </Button>
+                <button aria-label="Open menu" className="md:hidden w-10 h-10 flex items-center justify-center rounded-md hover:bg-red-900/20 active:bg-red-900/30">
+                  <Menu className="w-5 h-5" />
+                </button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 overflow-y-auto">
                 <SheetHeader>

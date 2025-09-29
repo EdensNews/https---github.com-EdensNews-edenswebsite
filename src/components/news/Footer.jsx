@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
 import { siteSettingsRepo } from '@/api/repos/siteSettingsRepo';
+import { SiteSettings } from '@/api/entities';
 import { Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
 
 const navigationLinks = [
@@ -21,9 +22,9 @@ export default function Footer() {
         description_kn: 'ಕರ್ನಾಟಕದ ಪ್ರಮುಖ ಸುದ್ದಿ ಚಾನೆಲ್. ನಿಮಗೆ ವಿಶ್ವಾಸಾರ್ಹ ಮತ್ತು ತ್ವರಿತ ಸುದ್ದಿ ತಲುಪಿಸುತ್ತದೆ.',
         description_en: 'Karnataka\'s leading news channel bringing you reliable and timely news coverage.',
         contact_email: 'info@edenstv.com',
-        contact_phone: '+91 80 1234 5678',
-        contact_address_kn: 'ಬೆಂಗಳೂರು, ಕರ್ನಾಟಕ, ಭಾರತ',
-        contact_address_en: 'Bangalore, Karnataka, India',
+        contact_phone: '7975898255',
+        contact_address_kn: '5ನೆ ಕ್ರಾಸ್, ಪದುವನ ರಸ್ತೆ, ಟಿ.ಕೆ ಲೇಔಟ್, ಕುವೆಂಪು ನಗರ, ಮೈಸೂರು, ಕರ್ನಾಟಕ 570023',
+        contact_address_en: '5th Cross, Paduvana Road, TK Layout, Kuvempu Nagara, Mysuru, Karnataka 570023',
         copyright_text_kn: '© 2025 ಈಡೆನ್ಸ್ ಟಿವಿ. ಎಲ್ಲ ಹಕ್ಕುಗಳೂ ಕಾಯ್ದಿರಿದೆ.',
         copyright_text_en: '© 2025 Edens TV. All rights reserved.',
         social_facebook: '',
@@ -42,6 +43,18 @@ export default function Footer() {
                     setSettings(prev => ({ ...prev, ...JSON.parse(cachedSettings) }));
                 }
 
+                // Try Base44 entity source (AdminSettings uses this)
+                try {
+                    const list = await SiteSettings.list('-created_date', 1);
+                    if (Array.isArray(list) && list.length) {
+                        const latestEntity = list[0];
+                        setSettings(prev => ({ ...prev, ...latestEntity }));
+                        localStorage.setItem('cached_site_settings', JSON.stringify(latestEntity));
+                        return; // prefer this source
+                    }
+                } catch {}
+
+                // Fallback to Supabase table if entity not available
                 const latest = await siteSettingsRepo.getLatest();
                 if (latest) {
                     setSettings(prev => ({ ...prev, ...latest }));
@@ -60,49 +73,58 @@ export default function Footer() {
         followUs: language === 'kn' ? 'ನಮ್ಮನ್ನು ಅನುಸರಿಸಿ' : 'Follow Us'
     };
 
+    const normalizeUrl = (u) => {
+        if (!u || typeof u !== 'string') return '';
+        const trimmed = u.trim();
+        if (!trimmed) return '';
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        return `https://${trimmed}`;
+    };
+
     const socialLinks = [
-        { 
-            icon: Facebook, 
-            url: settings.social_facebook, 
+        {
+            icon: Facebook,
+            url: normalizeUrl(settings.social_facebook),
             name: 'Facebook',
-            hoverColor: 'hover:bg-blue-600' 
+            hoverColor: 'hover:bg-blue-600'
         },
-        { 
-            icon: Twitter, 
-            url: settings.social_twitter, 
-            name: 'Twitter',
-            hoverColor: 'hover:bg-sky-500' 
-        },
-        { 
-            icon: Youtube, 
-            url: settings.social_youtube, 
+        {
+            icon: Youtube,
+            url: normalizeUrl(settings.social_youtube),
             name: 'YouTube',
-            hoverColor: 'hover:bg-red-600' 
+            hoverColor: 'hover:bg-red-600'
         },
-        { 
-            icon: Instagram, 
-            url: settings.social_instagram, 
+        {
+            icon: Twitter,
+            url: normalizeUrl(settings.social_twitter),
+            name: 'Twitter',
+            hoverColor: 'hover:bg-sky-500'
+        },
+        {
+            icon: Instagram,
+            url: normalizeUrl(settings.social_instagram),
             name: 'Instagram',
-            hoverColor: 'hover:bg-pink-600' 
+            hoverColor: 'hover:bg-pink-600'
         }
-    ].filter(link => link.url && link.url.trim() !== '');
+    ].filter(link => !!link.url);
 
     return (
         <footer className="bg-gray-900 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {/* Brand Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+                    {/* Brand / Description */}
                     <div className="col-span-1">
+                        <h3 className="text-xl font-bold mb-3 bg-gradient-to-r from-red-500 to-yellow-500 bg-clip-text text-transparent">
+                            {language === 'kn' ? settings.site_name_kn || 'ಈಡೆನ್ಸ್ ಟಿವಿ' : settings.site_name_en || 'Edens TV'}
+                        </h3>
                         <p className={`text-gray-400 text-sm leading-relaxed ${language === 'kn' ? 'font-kannada' : ''}`}>
                             {language === 'kn' ? settings.description_kn : settings.description_en}
                         </p>
                     </div>
 
-                    {/* Navigation Links */}
+                    {/* Navigation */}
                     <div className="col-span-1">
-                        <h4 className={`text-lg font-semibold mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>
-                            {text.navigation}
-                        </h4>
+                        <h4 className={`text-lg font-semibold mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>{text.navigation}</h4>
                         <ul className="space-y-2">
                             {navigationLinks.map(link => (
                                 <li key={link.name}>
@@ -117,7 +139,7 @@ export default function Footer() {
                             {settings.ai_app_url && (
                                 <li>
                                     <a 
-                                        href={settings.ai_app_url}
+                                        href={normalizeUrl(settings.ai_app_url)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`text-gray-400 hover:text-white transition-colors text-sm ${language === 'kn' ? 'font-kannada' : ''}`}
@@ -129,63 +151,62 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Contact & Social */}
+                    {/* Contact */}
                     <div className="col-span-1">
-                        <h4 className={`text-lg font-semibold mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>
-                            {text.contact}
-                        </h4>
-                        <div className="space-y-3 mb-6">
-                            <div className="flex items-start gap-2 text-gray-400">
-                                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                                <span className={`text-sm ${language === 'kn' ? 'font-kannada' : ''}`}>
-                                    {language === 'kn' ? settings.contact_address_kn : settings.contact_address_en}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <Mail className="w-4 h-4 flex-shrink-0" />
-                                <a 
-                                    href={`mailto:${settings.contact_email}`}
-                                    className="text-sm hover:text-white transition-colors"
-                                >
-                                    {settings.contact_email}
-                                </a>
-                            </div>
-                            <div className="flex items-center gap-2 text-gray-400">
-                                <Phone className="w-4 h-4 flex-shrink-0" />
-                                <a 
-                                    href={`tel:${settings.contact_phone}`}
-                                    className="text-sm hover:text-white transition-colors"
-                                >
-                                    {settings.contact_phone}
-                                </a>
-                            </div>
-                        </div>
-                        
-                        {socialLinks.length > 0 && (
-                            <>
-                                <h5 className={`text-sm font-semibold mb-3 ${language === 'kn' ? 'font-kannada' : ''}`}>
-                                    {text.followUs}
-                                </h5>
-                                <div className="flex gap-3 flex-wrap">
-                                    {socialLinks.map((social, index) => (
-                                        <a
-                                            key={index}
-                                            href={social.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={`w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center ${social.hoverColor} transition-colors`}
-                                            aria-label={social.name}
-                                        >
-                                            <social.icon className="w-4 h-4" />
-                                        </a>
-                                    ))}
+                        <h4 className={`text-lg font-semibold mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>{text.contact}</h4>
+                        <div className="space-y-3">
+                            {(settings.contact_address_kn || settings.contact_address_en) && (
+                                <div className="flex items-start gap-3 text-gray-400">
+                                    <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <span className={`text-sm leading-6 ${language === 'kn' ? 'font-kannada' : ''}`}>
+                                        {language === 'kn' ? settings.contact_address_kn : settings.contact_address_en}
+                                    </span>
                                 </div>
-                            </>
+                            )}
+                            {settings.contact_email && (
+                                <div className="flex items-center gap-3 text-gray-400">
+                                    <Mail className="w-5 h-5 flex-shrink-0" />
+                                    <a href={`mailto:${settings.contact_email}`} className="text-sm hover:text-white transition-colors">
+                                        {settings.contact_email}
+                                    </a>
+                                </div>
+                            )}
+                            {settings.contact_phone && (
+                                <div className="flex items-center gap-3 text-gray-400">
+                                    <Phone className="w-5 h-5 flex-shrink-0" />
+                                    <a href={`tel:${settings.contact_phone}`} className="text-sm hover:text-white transition-colors">
+                                        {settings.contact_phone}
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Social */}
+                    <div className="col-span-1">
+                        <h4 className={`text-lg font-semibold mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>{text.followUs}</h4>
+                        {socialLinks.length > 0 ? (
+                            <div className="flex gap-3 flex-wrap">
+                                {socialLinks.map((social, index) => (
+                                    <a
+                                        key={index}
+                                        href={social.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center ${social.hoverColor} transition-colors`}
+                                        aria-label={social.name}
+                                    >
+                                        <social.icon className="w-5 h-5" />
+                                    </a>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-gray-500">Links not set in Admin → Settings → Social</p>
                         )}
                     </div>
                 </div>
 
-                <div className="border-t border-gray-800 pt-6 lg:pt-8 mt-6 lg:mt-8">
+                <div className="border-t border-gray-800 pt-6 lg:pt-8 mt-8">
                     <p className={`text-center text-gray-400 text-sm ${language === 'kn' ? 'font-kannada' : ''}`}>
                         {language === 'kn' ? settings.copyright_text_kn : settings.copyright_text_en}
                     </p>

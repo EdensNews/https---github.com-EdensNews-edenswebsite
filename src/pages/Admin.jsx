@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss, RefreshCw } from 'lucide-react';
+import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss, RefreshCw, ChartBar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const adminSections = [
@@ -34,6 +34,13 @@ const adminSections = [
         icon: BarChart3,
         page: 'AdminCategories',
         color: 'from-purple-500 to-purple-600'
+    },
+    {
+        title: { kn: 'ಅನಾಲಿಟಿಕ್ಸ್', en: 'Analytics' },
+        description: { kn: 'ವೀಕ್ಷಣೆಗಳು, ಟ್ರೆಂಡಿಂಗ್, ಟಾಪ್ ಲೇಖನಗಳು ಇತ್ಯಾದಿಯನ್ನು ನೋಡಿ', en: 'View traffic, trending, top articles, and more' },
+        icon: ChartBar,
+        page: 'AdminAnalytics',
+        color: 'from-amber-500 to-amber-600'
     },
     {
         title: { kn: 'ಮೀಡಿಯಾ ಲೈಬ್ರರಿ', en: 'Media Library' },

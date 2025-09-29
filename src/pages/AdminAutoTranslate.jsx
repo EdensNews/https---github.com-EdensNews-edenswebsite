@@ -4,10 +4,11 @@ import { articlesRepo } from '@/api/repos/articlesRepo';
 import { categoriesRepo } from '@/api/repos/categoriesRepo';
 import { articleCategoriesRepo } from '@/api/repos/articleCategoriesRepo';
 import { fetchRss } from '@/api/functions';
-import { InvokeLLM } from '@/api/integrations';
+import { InvokeLLM } from '@/api/llm';
 import { detectLanguage, getTranslationDirection } from '@/utils/languageDetection';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useLanguage } from '@/components/LanguageContext';
+import { supabase } from '@/api/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +56,41 @@ function AdminAutoTranslateContent() {
         loadFeeds();
     }, [loadFeeds]);
 
+    const extractFirstImageSrc = (html) => {
+        if (!html) return '';
+        try {
+            const match = html.match(/<img[^>]*src=["']([^"'>]+)["'][^>]*>/i);
+            return match && match[1] ? match[1] : '';
+        } catch (e) {
+            return '';
+        }
+    };
+
+    const copyExternalImageToSupabase = async (imageUrl) => {
+        try {
+            if (!imageUrl) return '';
+            const supaUrl = import.meta.env.VITE_SUPABASE_URL || '';
+            const isExternal = !supaUrl || !imageUrl.includes(new URL(supaUrl).host);
+            if (!isExternal) return imageUrl;
+            const res = await fetch(imageUrl, { mode: 'cors' });
+            const blob = await res.blob();
+            const bucket = 'media';
+            const mime = blob.type || 'image/jpeg';
+            const ext = (mime.split('/')[1] || 'jpg').split(';')[0];
+            const key = `articles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+            const { error: upErr } = await supabase.storage.from(bucket).upload(key, blob, {
+                contentType: mime,
+                cacheControl: '3600',
+                upsert: false
+            });
+            if (upErr) return imageUrl;
+            const { data: pub } = supabase.storage.from(bucket).getPublicUrl(key);
+            return pub?.publicUrl || imageUrl;
+        } catch {
+            return imageUrl;
+        }
+    };
+
     const translateRssArticle = async (rssItem, feed) => {
         try {
             // Use improved language detection
@@ -78,18 +114,20 @@ function AdminAutoTranslateContent() {
                     response_json_schema: { type: "object", properties: { title_kn: { type: "string" }, content_kn: { type: "string" } } }
                 });
 
-                // Create article with both languages
+                // Create article with both languages, ensure titles populated
                 articleData = {
                     title_kn: translationResult.title_kn,
                     title_en: rssItem.title,
                     content_kn: translationResult.content_kn,
                     content_en: rssItem.description || rssItem.content || '',
                     reporter: feed.source_name || feed.name || 'RSS Feed',
-                    image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || '',
+                    image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || extractFirstImageSrc(translationResult.content_kn) || extractFirstImageSrc(rssItem.description || rssItem.content || ''),
                     is_breaking: false,
                     status: 'published',
                     published_at: new Date().toISOString()
                 };
+                // Fallback if title missing
+                if (!articleData.title_kn) articleData.title_kn = rssItem.title || '';
             } else {
                 // Translate Kannada to English
                 const translationResult = await InvokeLLM({
@@ -97,18 +135,25 @@ function AdminAutoTranslateContent() {
                     response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
                 });
 
-                // Create article with both languages
+                // Create article with both languages, ensure titles populated
                 articleData = {
                     title_kn: rssItem.title,
                     title_en: translationResult.title_en,
                     content_kn: rssItem.description || rssItem.content || '',
                     content_en: translationResult.content_en,
                     reporter: feed.source_name || feed.name || 'RSS Feed',
-                    image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || '',
+                    image_url: rssItem.image_url || rssItem.enclosure?.url || rssItem.media?.thumbnail?.url || extractFirstImageSrc(rssItem.description || rssItem.content || '') || extractFirstImageSrc(translationResult.content_en),
                     is_breaking: false,
                     status: 'published',
                     published_at: new Date().toISOString()
                 };
+                // Fallback if title missing
+                if (!articleData.title_en) articleData.title_en = rssItem.title || '';
+            }
+
+            // Ensure image is stored in Supabase if available
+            if (articleData.image_url) {
+                articleData.image_url = await copyExternalImageToSupabase(articleData.image_url);
             }
 
             // Create the article
@@ -169,8 +214,8 @@ function AdminAutoTranslateContent() {
                     return;
                 }
 
-                // Process up to 2 articles from the selected feed
-                const articlesToProcess = data.articles.slice(0, 2);
+                // Process only 1 article from the selected feed
+                const articlesToProcess = data.articles.slice(0, 1);
                 
                 for (const article of articlesToProcess) {
                     const result = await translateRssArticle(article, randomFeed);

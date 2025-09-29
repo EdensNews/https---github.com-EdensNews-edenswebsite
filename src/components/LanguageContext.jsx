@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { User } from '@/api/user';
 
 const LanguageContext = createContext();
+const SUPPORTED_LANGUAGES = ['kn','en','ta','te','hi','ml'];
 
 export const LanguageProvider = ({ children }) => {
     const [language, setLanguage] = useState('kn'); // Default to Kannada
@@ -34,7 +35,7 @@ export const LanguageProvider = ({ children }) => {
             } else {
                 // User is logged in but no preference set, check localStorage
                 const savedLang = localStorage.getItem('preferred_language');
-                if (savedLang && (savedLang === 'kn' || savedLang === 'en')) {
+                if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
                     setLanguage(savedLang);
                     // Save this preference to user profile
                     if (currentUser) {
@@ -45,7 +46,7 @@ export const LanguageProvider = ({ children }) => {
         } catch {
             // User not logged in, check localStorage
             const savedLang = localStorage.getItem('preferred_language');
-            if (savedLang && (savedLang === 'kn' || savedLang === 'en')) {
+            if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
                 setLanguage(savedLang);
             }
         }
@@ -56,34 +57,30 @@ export const LanguageProvider = ({ children }) => {
         loadLanguagePreference();
     }, []);
 
-    const toggleLanguage = async () => {
-        const newLang = language === 'kn' ? 'en' : 'kn';
+    const setAppLanguage = async (newLang) => {
+        if (!SUPPORTED_LANGUAGES.includes(newLang)) return;
         setLanguage(newLang);
-        
-        // Always save to localStorage first
         localStorage.setItem('preferred_language', newLang);
-        
-        // If user is logged in, also save to their profile
-        if (user) {
+        // Persist only for kn/en due to DB constraint
+        if (user && (newLang === 'kn' || newLang === 'en')) {
             try {
                 await User.updateMyUserData({ preferred_language: newLang });
-                // Update cached user data
                 const updatedUser = { ...user, preferred_language: newLang };
                 setUser(updatedUser);
                 localStorage.setItem('cached_user', JSON.stringify(updatedUser));
             } catch (error) {
                 console.error("Failed to update user language preference:", error);
-                // Don't revert the local change if server update fails
             }
         }
     };
 
     return (
         <LanguageContext.Provider value={{ 
-            language, 
-            toggleLanguage, 
+            language,
+            setLanguage: setAppLanguage,
             isLoading,
-            user 
+            user,
+            supportedLanguages: SUPPORTED_LANGUAGES
         }}>
             {children}
         </LanguageContext.Provider>

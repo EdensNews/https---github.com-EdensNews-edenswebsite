@@ -14,6 +14,24 @@ export default function Layout({ children }) {
     document.documentElement.classList.add('dark');
   }, []);
 
+  // Scroll to top on route change
+  useEffect(() => {
+    const unlisten = (() => {
+      // Fallback approach: observe URL changes
+      let last = window.location.href;
+      const interval = setInterval(() => {
+        if (window.location.href !== last) {
+          last = window.location.href;
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        }
+      }, 150);
+      return () => clearInterval(interval);
+    })();
+    return () => {
+      if (typeof unlisten === 'function') unlisten();
+    };
+  }, []);
+
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-sans transition-all duration-500">
