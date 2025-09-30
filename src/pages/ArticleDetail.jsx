@@ -1,6 +1,7 @@
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
+
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { bookmarksRepo } from '@/api/repos/bookmarksRepo';
 import { analyticsRepo } from '@/api/repos/analyticsRepo';
@@ -12,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, User as UserIcon, Bookmark, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
+import AdSenseAd from '@/components/AdSenseAd';
 // toast removed per request
 
 function useQuery() {
@@ -82,6 +84,56 @@ export default function ArticleDetail() {
         checkBookmark();
     }, [user, article]);
 
+    // Google Analytics page view tracking
+    useEffect(() => {
+        // Compute title for GA tracking
+        const currentTitle = (() => {
+            if (!article) return '';
+            if (language === 'kn') return article.title_kn || article.title_en || '';
+            if (language === 'en') return article.title_en || article.title_kn || '';
+            if (language === 'ta') return article.title_ta || (translated.ta && translated.ta.title) || article.title_en || article.title_kn || '';
+            if (language === 'te') return article.title_te || (translated.te && translated.te.title) || article.title_en || article.title_kn || '';
+            if (language === 'hi') return article.title_hi || (translated.hi && translated.hi.title) || article.title_en || article.title_kn || '';
+            if (language === 'ml') return article.title_ml || (translated.ml && translated.ml.title) || article.title_en || article.title_kn || '';
+            const t = translated[language];
+            return (t && t.title) || article.title_en || article.title_kn || '';
+        })();
+
+        if (typeof window !== 'undefined' && window.gtag && currentTitle) {
+            window.gtag('config', 'G-M8C1T8ZMN7', {
+                'page_title': `${currentTitle} | Edens News`,
+                'page_location': window.location.href,
+                'custom_map': {'dimension1': language}
+            });
+        }
+    }, [article, language, translated]);
+
+    // Track article view when article loads
+    useEffect(() => {
+        // Compute title for GA tracking
+        const currentTitle = (() => {
+            if (!article) return '';
+            if (language === 'kn') return article.title_kn || article.title_en || '';
+            if (language === 'en') return article.title_en || article.title_kn || '';
+            if (language === 'ta') return article.title_ta || (translated.ta && translated.ta.title) || article.title_en || article.title_kn || '';
+            if (language === 'te') return article.title_te || (translated.te && translated.te.title) || article.title_en || article.title_kn || '';
+            if (language === 'hi') return article.title_hi || (translated.hi && translated.hi.title) || article.title_en || article.title_kn || '';
+            if (language === 'ml') return article.title_ml || (translated.ml && translated.ml.title) || article.title_en || article.title_kn || '';
+            const t = translated[language];
+            return (t && t.title) || article.title_en || article.title_kn || '';
+        })();
+
+        if (article && typeof window !== 'undefined' && window.gtag && currentTitle) {
+            window.gtag('event', 'article_view', {
+                'article_id': article.id,
+                'article_title': currentTitle,
+                'article_category': article.category,
+                'article_language': language,
+                'article_author': article.reporter || 'Unknown'
+            });
+        }
+    }, [article, language, translated]);
+
     const isStoredLang = (lng) => lng === 'kn' || lng === 'en';
 
     // On-the-fly translation when selecting non-stored languages (must be before any early returns)
@@ -120,17 +172,43 @@ export default function ArticleDetail() {
 
     const handleBookmark = async () => {
         if (!user) return;
-            try {
-                if (isBookmarked) {
-                    await bookmarksRepo.remove(user.id, article.id);
-                    setIsBookmarked(false);
-                } else {
-                    setIsBookmarked(true);
+
+        // Track bookmark attempt
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'bookmark_attempt', {
+                'article_id': article.id,
+                'article_title': title,
+                'current_state': isBookmarked ? 'bookmarked' : 'not_bookmarked'
+            });
+        }
+
+        try {
+            if (isBookmarked) {
+                await bookmarksRepo.remove(user.id, article.id);
+                setIsBookmarked(false);
+
+                // Track bookmark removal
+                if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'bookmark_removed', {
+                        'article_id': article.id,
+                        'article_title': title
+                    });
                 }
-            } catch (error) {
-                console.error("Failed to update bookmarks", error);
+            } else {
+                setIsBookmarked(true);
+
+                // Track bookmark added
+                if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'bookmark_added', {
+                        'article_id': article.id,
+                        'article_title': title
+                    });
+                }
             }
-        };
+        } catch (error) {
+            console.error("Failed to update bookmarks", error);
+        }
+    };
     const handleShare = async () => {
         const title = language === 'kn' ? (article.title_kn || article.title_en) : (article.title_en || article.title_kn);
         // Use consistent URL structure
@@ -139,17 +217,43 @@ export default function ArticleDetail() {
 ${url}
 
 Shared from Edens News`;
-        
+
+        // Track share attempt
+        if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'share_attempt', {
+                'article_id': article.id,
+                'article_title': title,
+                'share_method': 'native_share'
+            });
+        }
+
         // Strategy 1: Try text-only sharing first (this ensures text is always visible)
         if (navigator.share) {
             try {
                 await navigator.share({ title, text: shareText, url });
+
+                // Track successful share
+                if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'share_success', {
+                        'article_id': article.id,
+                        'article_title': title,
+                        'share_method': 'native_share'
+                    });
+                }
                 return;
             } catch { /* user cancelled */ }
         }
         // Final fallback: copy to clipboard
         try {
             await navigator.clipboard.writeText(shareText);
+
+            // Track successful copy
+            if (typeof window !== 'undefined' && window.gtag) {
+                window.gtag('event', 'share_copy', {
+                    'article_id': article.id,
+                    'article_title': title
+                });
+            }
         } catch (err) {
             console.error('Failed to copy to clipboard:', err);
         }
@@ -232,10 +336,10 @@ Shared from Edens News`;
                 <meta property="og:site_name" content="Edens News" />
                 <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
 
-                {/* Article specific Open Graph tags */}
-                {article.reporter && <meta property="article:author" content={article.reporter} />}
-                {article.created_at && <meta property="article:published_time" content={new Date(article.created_at).toISOString()} />}
-                {article.category && <meta property="article:section" content={String(article.category)} />}
+                {/* Facebook App ID */}
+                {import.meta.env.VITE_FACEBOOK_APP_ID && (
+                  <meta property="fb:app_id" content={import.meta.env.VITE_FACEBOOK_APP_ID} />
+                )}
 
                 {/* Image meta tags */}
                 {ogShareUrl && (
@@ -276,7 +380,16 @@ Shared from Edens News`;
                     </header>
 
                     <img src={article.image_url} alt={title} className="w-full rounded-2xl shadow-lg mb-8" onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="100%" height="100%" fill="%23eeeeee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23777" font-family="Arial" font-size="24">Image not available</text></svg>'; }} />
-                    
+
+                    {/* In-content AdSense Ad */}
+                    <div className="my-8 text-center">
+                      <AdSenseAd
+                        slot="9876543210"
+                        format="rectangle"
+                        style={{ display: 'block', margin: '0 auto', minHeight: '250px' }}
+                        className="mb-8"
+                      />
+                    </div>
                     <div className="flex items-center justify-end gap-2 mb-8">
                         <Button variant="outline" onClick={handleBookmark} disabled={userLoading}>
                             <Bookmark className={`w-5 h-5 mr-2 transition-colors ${isBookmarked ? 'text-orange-500 fill-current' : ''}`} />
@@ -298,6 +411,16 @@ Shared from Edens News`;
                     </div>
 
                     <div className={`prose prose-lg dark:prose-invert max-w-none ${language === 'kn' ? 'font-kannada' : ''}`} dangerouslySetInnerHTML={{ __html: content }}></div>
+
+                    {/* Post-content AdSense Ad */}
+                    <div className="mt-12 mb-8 text-center border-t border-gray-200 dark:border-gray-700 pt-8">
+                      <AdSenseAd
+                        slot="1357924680"
+                        format="rectangle"
+                        style={{ display: 'block', margin: '0 auto', minHeight: '250px' }}
+                        className="mb-4"
+                      />
+                    </div>
                 </article>
             </div>
         </div>

@@ -160,14 +160,34 @@ export default function Layout({ children }) {
 
             /* Mobile touch improvements */
             @media (max-width: 768px) {
-              /* Ensure touch targets are at least 44px */
-              button, a, [role="button"] {
+              /* Ensure touch targets are at least 44px and properly aligned */
+              .mobile-header-button {
                 min-height: 44px;
                 min-width: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+              }
+
+              /* Fix header positioning */
+              header {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 50 !important;
+              }
+
+              /* Ensure logo and buttons are properly aligned */
+              .header-logo-link, .header-nav-link {
+                display: flex;
+                align-items: center;
+                position: relative;
               }
 
               /* Improve touch feedback */
-              button:active, [role="button"]:active {
+              button:active, [role="button"]:active, a:active {
                 transform: scale(0.98);
                 transition: transform 0.1s ease;
               }
