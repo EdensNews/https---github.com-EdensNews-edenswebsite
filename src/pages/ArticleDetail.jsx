@@ -210,8 +210,8 @@ Shared from Edens News`;
     const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
     const shareImage = article.image_url && article.image_url.startsWith('http') ? article.image_url : `${siteUrl}${article.image_url || ''}`;
-    // Use Netlify function URL for OG previews when sharing
-    const ogShareUrl = `${siteUrl}/.netlify/functions/share-og?id=${article.id}`;
+    // Use Netlify function URL for OG previews when sharing, with fallback
+    const ogShareUrl = shareImage && shareImage !== `${siteUrl}/` ? `${siteUrl}/.netlify/functions/share-og?id=${article.id}` : shareImage;
     const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     
@@ -222,19 +222,47 @@ Shared from Edens News`;
             <Helmet>
                 <title>{`${title} | Edens News`}</title>
                 <link rel="canonical" href={canonicalUrl} />
+                <meta name="description" content={shareDesc} />
+
+                {/* Open Graph / Facebook */}
                 <meta property="og:type" content="article" />
                 <meta property="og:url" content={canonicalUrl} />
                 <meta property="og:title" content={title} />
                 <meta property="og:description" content={shareDesc} />
-                {shareImage && <meta property="og:image" content={shareImage} />}
-                {shareImage && <meta property="og:image:secure_url" content={shareImage} />}
-                {shareImage && <meta property="og:image:alt" content={title} />} 
                 <meta property="og:site_name" content="Edens News" />
+                <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
+
+                {/* Article specific Open Graph tags */}
+                {article.reporter && <meta property="article:author" content={article.reporter} />}
+                {article.created_at && <meta property="article:published_time" content={new Date(article.created_at).toISOString()} />}
+                {article.category && <meta property="article:section" content={String(article.category)} />}
+
+                {/* Image meta tags */}
+                {ogShareUrl && ogShareUrl !== siteUrl && (
+                    <>
+                        <meta property="og:image" content={ogShareUrl} />
+                        <meta property="og:image:secure_url" content={ogShareUrl} />
+                        <meta property="og:image:alt" content={title} />
+                        <meta property="og:image:width" content="1200" />
+                        <meta property="og:image:height" content="630" />
+                        <meta property="og:image:type" content="image/jpeg" />
+                    </>
+                )}
+
+                {/* Twitter Card */}
                 <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:site" content="@edensnews" />
                 <meta name="twitter:title" content={title} />
                 <meta name="twitter:description" content={shareDesc} />
-                {shareImage && <meta name="twitter:image" content={shareImage} />}
-                {shareImage && <meta name="twitter:image:alt" content={title} />}
+                {ogShareUrl && ogShareUrl !== siteUrl && <meta name="twitter:image" content={ogShareUrl} />}
+                {ogShareUrl && ogShareUrl !== siteUrl && <meta name="twitter:image:alt" content={title} />}
+
+                {/* WhatsApp specific meta tags */}
+                <meta property="og:image:type" content="image/jpeg" />
+
+                {/* Additional meta tags for better sharing */}
+                <meta name="author" content={article.reporter || 'Edens News'} />
+                <meta name="keywords" content={`news, ${article.category}, ${language === 'kn' ? 'ಕನ್ನಡ' : 'English'}, Edens News`} />
             </Helmet>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <article>

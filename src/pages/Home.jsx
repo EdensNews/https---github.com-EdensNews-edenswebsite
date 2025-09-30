@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { articlesRepo } from '@/api/repos/articlesRepo';
 import { analyticsRepo } from '@/api/repos/analyticsRepo';
 import { useLanguage } from '@/components/LanguageContext';
@@ -83,6 +84,25 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Helmet>
+                <title>{`${pageTitle} | Edens News`}</title>
+                <meta name="description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news in Kannada, English, Tamil, Telugu, Hindi, and Malayalam.`} />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com'} />
+                <meta property="og:title" content={`${pageTitle} | Edens News`} />
+                <meta property="og:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
+                <meta property="og:site_name" content="Edens News" />
+                <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:site" content="@edensnews" />
+                <meta name="twitter:title" content={`${pageTitle} | Edens News`} />
+                <meta name="twitter:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
+            </Helmet>
+
             <h2 className="text-2xl mb-8 font-extrabold text-center dark:text-gray-100">
                 {pageTitle}
             </h2>
