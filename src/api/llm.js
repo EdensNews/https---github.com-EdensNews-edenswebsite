@@ -1,7 +1,8 @@
 // Lightweight LLM wrapper that uses Gemini exclusively
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash-latest'
+const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash'
+const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE || ''
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -46,25 +47,10 @@ async function postWithRetry(url, body, { maxRetries = 4, initialDelayMs = 1000,
   throw lastError || new Error('Gemini request failed')
 }
 
-async function listModels() {
-  const url = `https://generativelanguage.googleapis.com/v1/models?key=${encodeURIComponent(GEMINI_API_KEY)}`
-  const res = await fetch(url)
-  if (!res.ok) {
-    const txt = await res.text().catch(() => '')
-    throw new Error(`Gemini ListModels HTTP ${res.status} - ${txt}`)
-  }
-  const data = await res.json()
-  return Array.isArray(data?.models) ? data.models : []
-}
+// listModels removed from client to avoid CORS; rely on explicit candidates
 
 async function invokeGemini({ prompt, response_json_schema }) {
-  const modelCandidates = [GEMINI_MODEL]
-  if (GEMINI_MODEL?.endsWith('-latest')) modelCandidates.push(GEMINI_MODEL.replace(/-latest$/, ''))
-  // If user configured a pro model and it 404s, a flash model might exist and vice versa
-  if (GEMINI_MODEL?.includes('pro')) modelCandidates.push(GEMINI_MODEL.replace('pro', 'flash'))
-  if (GEMINI_MODEL?.includes('flash')) modelCandidates.push(GEMINI_MODEL.replace('flash', 'pro'))
-  // Also try commonly available numbered variants
-  modelCandidates.push('gemini-1.5-pro-002', 'gemini-1.5-flash-002')
+  const modelCandidates = [ (GEMINI_MODEL || '').replace(/-latest$/, '') || 'gemini-2.0-flash' ]
 
   const systemInstruction = 'You are a translation assistant. When asked to return JSON, return ONLY strict, valid JSON with no extra text.'
 
@@ -91,17 +77,16 @@ async function invokeGemini({ prompt, response_json_schema }) {
   // First attempt direct candidates
   for (const ver of apiVersions) {
     for (const model of modelCandidates) {
-      // Try direct; if CORS/network fails, try proxy
       const directUrl = `https://generativelanguage.googleapis.com/${ver}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`
       try {
         let res
         try {
+          // Try direct first (works on some models in localhost)
           res = await postWithRetry(directUrl, body)
         } catch (err) {
-          // If browser blocked by CORS, fall back to Netlify proxy
-          if (typeof window !== 'undefined' && /Failed to fetch|CORS|NetworkError|ERR_FAILED/i.test(err?.message || '')) {
-            const proxyRes = await postWithRetry('/.netlify/functions/gemini-proxy', { model, apiVersion: ver, body })
-            res = proxyRes
+          // If proxy base configured, fallback to proxy
+          if (FUNCTIONS_BASE && /Failed to fetch|CORS|NetworkError|ERR_FAILED/i.test(err?.message || '')) {
+            res = await postWithRetry(`${FUNCTIONS_BASE}/.netlify/functions/gemini-proxy`, { model, apiVersion: ver, body })
           } else {
             throw err
           }
@@ -110,7 +95,24 @@ async function invokeGemini({ prompt, response_json_schema }) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         if (response_json_schema) {
           const jsonText = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/,'').trim()
-          try { return JSON.parse(jsonText) } catch (e) { throw new Error('Gemini returned non-JSON') }
+
+          // Try to parse the JSON directly first
+          try {
+            return JSON.parse(jsonText)
+          } catch (e) {
+            // If that fails, try to extract just the JSON object part
+            const jsonMatch = jsonText.match(/\{.*\}/s) // Match everything between first { and last }
+            if (jsonMatch) {
+              try {
+                return JSON.parse(jsonMatch[0])
+              } catch (e2) {
+                console.error('Gemini JSON parse error:', e2)
+                console.error('Original response:', text)
+                console.error('Extracted JSON:', jsonMatch[0])
+              }
+            }
+            throw new Error('Gemini returned non-JSON')
+          }
         }
         return { text }
       } catch (e) {
@@ -118,58 +120,6 @@ async function invokeGemini({ prompt, response_json_schema }) {
         // Try the next candidate
       }
     }
-  }
-
-  // If all direct candidates failed, discover available models and pick a supported one
-  try {
-    const models = await listModels()
-    // Prefer 1.5 models that support generateContent; exclude 2.0 unless explicitly requested in env
-    const want20 = /2\.0/.test(GEMINI_MODEL || '')
-    const supported = models.filter(m => {
-      const methods = m.supportedGenerationMethods || []
-      const name = m.name || ''
-      const is20 = /(^|\/)gemini-2\.0/.test(name)
-      if (is20 && !want20) return false
-      return methods.includes('generateContent')
-    })
-    const preferred = supported.sort((a, b) => {
-      const score = (name) => (
-        (name.includes('1.5') ? 200 : 0) +
-        (name.includes('pro') ? 10 : 0) +
-        (name.includes('flash') ? 5 : 0) +
-        (/-\d+$/.test(name) ? 1 : 0)
-      )
-      return score(b.name || '') - score(a.name || '')
-    })
-    for (const m of preferred) {
-      for (const ver of apiVersions) {
-        const directUrl = `https://generativelanguage.googleapis.com/${ver}/${encodeURIComponent(m.name)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`
-        try {
-          let res
-          try {
-            res = await postWithRetry(directUrl, body)
-          } catch (err) {
-            if (typeof window !== 'undefined' && /Failed to fetch|CORS|NetworkError|ERR_FAILED/i.test(err?.message || '')) {
-              const proxyRes = await postWithRetry('/.netlify/functions/gemini-proxy', { model: m.name.replace(/^models\//,''), apiVersion: ver, body })
-              res = proxyRes
-            } else {
-              throw err
-            }
-          }
-          const data = await res.json()
-          const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-          if (response_json_schema) {
-            const jsonText = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/,'').trim()
-            try { return JSON.parse(jsonText) } catch (e) { throw new Error('Gemini returned non-JSON') }
-          }
-          return { text }
-        } catch (e) {
-          lastErr = new Error(`${e?.message || e} for ${ver}/${m.name}`)
-        }
-      }
-    }
-  } catch (e) {
-    lastErr = e
   }
   throw lastErr || new Error('Gemini request failed')
 }

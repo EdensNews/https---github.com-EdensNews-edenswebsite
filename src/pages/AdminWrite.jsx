@@ -384,7 +384,15 @@ function AdminWriteContent() {
         }
         if (!suppressSpinner) setIsTranslating(true);
         try {
-            const prompt = `Translate the following ${hasEnglish ? 'English' : 'Kannada'} news article to ${targetName}. Maintain journalistic style and accuracy. Preserve HTML formatting, image tags, and video embeds. Return strict JSON: {"title": "...", "content": "..."}. Title: ${srcTitle}. Content: ${srcContent}`;
+            const prompt = `Translate the following ${hasEnglish ? 'English' : 'Kannada'} news article to ${targetName}. Maintain journalistic style and accuracy. Preserve HTML formatting, image tags, and video embeds.
+
+IMPORTANT: You must respond with ONLY a valid JSON object in this exact format, no other text:
+{"title": "Translated title here", "content": "Translated content with HTML here"}
+
+CRITICAL: In the JSON, make sure to properly escape any quotes within the content field by using backslashes. For example: "content": "He said \\"Hello World\\""
+
+Title: ${srcTitle}
+Content: ${srcContent}`;
             const result = await InvokeLLM({
                 prompt,
                 response_json_schema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' } } }
@@ -411,7 +419,14 @@ function AdminWriteContent() {
             if (!article.title_en || !article.content_en) {
                 if (article.title_kn && article.content_kn) {
                     const resEn = await InvokeLLM({
-                        prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve HTML formatting. Return strict JSON: {"title_en":"...","content_en":"..."}. Title: ${article.title_kn}. Content: ${article.content_kn}`,
+                        prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve HTML formatting.
+
+IMPORTANT: Respond with ONLY valid JSON in this exact format: {"title_en": "English title", "content_en": "English content with HTML"}
+
+CRITICAL: Properly escape quotes in content: "content_en": "He said \\"Hello\\""
+
+Title: ${article.title_kn}
+Content: ${article.content_kn}`,
                         response_json_schema: { type: 'object', properties: { title_en: { type: 'string' }, content_en: { type: 'string' } } }
                     });
                     setArticle(prev => ({ ...prev, title_en: resEn.title_en, content_en: resEn.content_en }));
@@ -518,7 +533,13 @@ function AdminWriteContent() {
         try {
             if (!article.title_en || !article.content_en) {
                 const translationResult = await InvokeLLM({
-                    prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve any HTML formatting, image tags, and video embeds. Title: ${article.title_kn}. Content: ${article.content_kn}. Provide the translation in this exact JSON format: {"title_en": "English title", "content_en": "English content with preserved HTML formatting"}`,
+                    prompt: `Translate the following Kannada news article to English. Maintain journalistic style and accuracy. Preserve any HTML formatting, image tags, and video embeds.
+
+IMPORTANT: Respond with ONLY valid JSON: {"title_en": "English title", "content_en": "English content"}
+
+CRITICAL: Properly escape quotes in content: "content_en": "He said \\"Hello\\""
+
+Title: ${article.title_kn}. Content: ${article.content_kn}`,
                     response_json_schema: { type: "object", properties: { title_en: { type: "string" }, content_en: { type: "string" } } }
                 });
                 setArticle(prev => ({ ...prev, title_en: prev.title_en || translationResult.title_en || '', content_en: prev.content_en || translationResult.content_en || '' }));
