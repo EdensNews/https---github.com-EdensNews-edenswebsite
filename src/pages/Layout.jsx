@@ -207,12 +207,18 @@ export default function Layout({ children }) {
             .animate-pulse {
               animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
             }
+
+            /* Ensure content is above fixed elements and tappable */
+            main {
+              position: relative;
+              z-index: 1;
+            }
           `}
         </style>
         <Header />
         <BreakingMarquee />
-        <main className="pt-24 sm:pt-28 lg:pt-32 min-h-screen">
-          <div className="bg-slate-900 text-slate-50 animate-in fade-in duration-700">
+        <main className="relative pt-0 sm:pt-[120px] lg:pt-[140px]">
+          <div className="animate-in fade-in duration-700">
             {children}
           </div>
         </main>

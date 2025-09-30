@@ -39,6 +39,7 @@ function AdminWriteContent() {
         title_kn: '', title_en: '', content_kn: '', content_en: '',
         title_ta: '', title_te: '', title_hi: '', title_ml: '',
         content_ta: '', content_te: '', content_hi: '', content_ml: '',
+        reporter_kn: '', reporter_en: '', reporter_ta: '', reporter_te: '', reporter_hi: '', reporter_ml: '',
         category: '', reporter: '', image_url: '', is_breaking: false
     });
     const [translated, setTranslated] = useState({ en: null, ta: null, te: null, hi: null, ml: null });
@@ -90,6 +91,12 @@ function AdminWriteContent() {
                 content_hi: existingArticle.content_hi || '',
                 content_ml: existingArticle.content_ml || '',
                         reporter: existingArticle.reporter || existingArticle.author || existingArticle.reporter_name || existingArticle.author_name || existingArticle.reported_by || existingArticle.writer || existingArticle.editor || '',
+                        reporter_kn: existingArticle.reporter_kn || '',
+                        reporter_en: existingArticle.reporter_en || '',
+                        reporter_ta: existingArticle.reporter_ta || '',
+                        reporter_te: existingArticle.reporter_te || '',
+                        reporter_hi: existingArticle.reporter_hi || '',
+                        reporter_ml: existingArticle.reporter_ml || '',
                         image_url: existingArticle.image_url || existingArticle.image || existingArticle.thumbnail_url || existingArticle.cover_image || '',
                     };
 
@@ -606,6 +613,12 @@ Title: ${article.title_kn}. Content: ${article.content_kn}`,
                 content_hi: article.content_hi || null,
                 content_ml: article.content_ml || null,
                 reporter: article.reporter || null,
+                reporter_kn: article.reporter_kn || null,
+                reporter_en: article.reporter_en || null,
+                reporter_ta: article.reporter_ta || null,
+                reporter_te: article.reporter_te || null,
+                reporter_hi: article.reporter_hi || null,
+                reporter_ml: article.reporter_ml || null,
                 image_url: article.image_url,
                 is_breaking: !!article.is_breaking,
                 breaking_expires_at: null,
@@ -739,13 +752,74 @@ Title: ${article.title_kn}. Content: ${article.content_kn}`,
                                         </p>
                                     )}
                                 </div>
-                                <div>
-                                    <Label className="dark:text-gray-300">{language === 'kn' ? 'ವರದಿಗಾರ' : 'Reporter'}</Label>
-                                    <Input 
-                                        value={article.reporter} 
-                                        onChange={(e) => setArticle({...article, reporter: e.target.value})} 
-                                        placeholder="Reporter name" 
-                                    />
+                                <div className="space-y-4">
+                                    <Label className="dark:text-gray-300 text-lg font-semibold">{language === 'kn' ? 'ವರದಿಗಾರ ಹೆಸರು (ಎಲ್ಲಾ ಭಾಷೆಗಳಲ್ಲಿ)' : 'Reporter Name (All Languages)'}</Label>
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">Kannada (ಕನ್ನಡ)</Label>
+                                            <Input 
+                                                value={article.reporter_kn} 
+                                                onChange={(e) => setArticle({...article, reporter_kn: e.target.value})} 
+                                                placeholder="ವರದಿಗಾರ ಹೆಸರು" 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">English</Label>
+                                            <Input 
+                                                value={article.reporter_en} 
+                                                onChange={(e) => setArticle({...article, reporter_en: e.target.value})} 
+                                                placeholder="Reporter name" 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">Tamil (தமிழ்)</Label>
+                                            <Input 
+                                                value={article.reporter_ta} 
+                                                onChange={(e) => setArticle({...article, reporter_ta: e.target.value})} 
+                                                placeholder="செய்தியாளர் பெயர்" 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">Telugu (తెలుగు)</Label>
+                                            <Input 
+                                                value={article.reporter_te} 
+                                                onChange={(e) => setArticle({...article, reporter_te: e.target.value})} 
+                                                placeholder="రిపోర్టర్ పేరు" 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">Hindi (हिंदी)</Label>
+                                            <Input 
+                                                value={article.reporter_hi} 
+                                                onChange={(e) => setArticle({...article, reporter_hi: e.target.value})} 
+                                                placeholder="रिपोर्टर का नाम" 
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <Label className="dark:text-gray-300 text-sm">Malayalam (മലയാളം)</Label>
+                                            <Input 
+                                                value={article.reporter_ml} 
+                                                onChange={(e) => setArticle({...article, reporter_ml: e.target.value})} 
+                                                placeholder="റിപ്പോർട്ടർ പേര്" 
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <Label className="dark:text-gray-300 text-sm">{language === 'kn' ? 'ಡೀಫಾಲ್ಟ್ ವರದಿಗಾರ (ಹಳೆಯ ಕ್ಷೇತ್ರ)' : 'Default Reporter (Legacy Field)'}</Label>
+                                        <Input 
+                                            value={article.reporter} 
+                                            onChange={(e) => setArticle({...article, reporter: e.target.value})} 
+                                            placeholder="Reporter name" 
+                                            className="opacity-60"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2">

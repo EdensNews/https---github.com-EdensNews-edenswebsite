@@ -70,9 +70,9 @@ export default function BreakingMarquee() {
     const { Icon, text, style, iconClass } = MarqueeLabel();
 
     return (
-        <div className="fixed top-14 sm:top-16 lg:top-20 left-0 right-0 z-40 overflow-hidden">
+        <div className="fixed top-14 sm:top-16 lg:top-20 left-0 right-0 z-40 overflow-hidden min-h-[48px]">
             {/* Animated background with multiple layers */}
-            <div className="relative bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-2 shadow-2xl">
+            <div className="relative bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-2 shadow-2xl min-h-[48px]">
                 {/* Shiny overlay effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 

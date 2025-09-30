@@ -10,6 +10,9 @@ module.exports = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		fontFamily: {
+  			kannada: ['Noto Sans Kannada', 'sans-serif'],
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -73,10 +76,10 @@ module.exports = {
   			},
   			'accordion-up': {
   				from: {
-  					height: 'var(--radix-accordion-content-height)'
+  					height: '0'
   				},
   				to: {
-  					height: '0'
+  					height: 'var(--radix-accordion-content-height)'
   				}
   			}
   		},
@@ -86,5 +89,8 @@ module.exports = {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+  ],
 }

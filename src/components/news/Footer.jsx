@@ -6,7 +6,6 @@ import { useLanguage } from '@/components/LanguageContext';
 import { siteSettingsRepo } from '@/api/repos/siteSettingsRepo';
 import { SiteSettings } from '@/api/entities';
 import { Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
-import AdSenseAd from '@/components/AdSenseAd';
 
 const navigationLinks = [
     { name: 'Home', page: 'Home', kn_name: 'ಮುಖಪುಟ' },
@@ -205,16 +204,6 @@ export default function Footer() {
                             <p className="text-sm text-gray-500">Links not set in Admin → Settings → Social</p>
                         )}
                     </div>
-                </div>
-
-                {/* Footer AdSense Banner */}
-                <div className="mb-6">
-                  <AdSenseAd
-                    slot="2468135790"
-                    format="horizontal"
-                    style={{ display: 'block', margin: '0 auto', minHeight: '90px' }}
-                    className="text-center"
-                  />
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 lg:pt-8 mt-8">

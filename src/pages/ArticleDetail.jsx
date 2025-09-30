@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, User as UserIcon, Bookmark, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import AdSenseAd from '@/components/AdSenseAd';
 // toast removed per request
 
 function useQuery() {
@@ -322,7 +321,29 @@ Shared from Edens News`;
     // (removed duplicate translation effect to maintain stable hook order)
 
     return (
-        <div className="bg-white dark:bg-gray-800">
+        <div className="bg-white dark:bg-gray-800 relative z-20">
+            <style>
+                {`
+                    /* Mobile-only spacing for ArticleDetail to clear header + ticker */
+                    @media screen and (max-width: 640px) {
+                        .article-detail-wrapper {
+                            height: 120px !important;
+                            display: block !important;
+                        }
+                        
+                        .article-header-mobile {
+                            position: relative !important;
+                            z-index: 1 !important;
+                        }
+                        
+                        .article-content-wrapper {
+                            position: relative !important;
+                            z-index: 1 !important;
+                        }
+                    }
+                `}
+            </style>
+            <div className="article-detail-wrapper"></div>
             <Helmet>
                 <title>{`${title} | Edens News`}</title>
                 <link rel="canonical" href={canonicalUrl} />
@@ -368,59 +389,49 @@ Shared from Edens News`;
                 <meta name="author" content={article.reporter || 'Edens News'} />
                 <meta name="keywords" content={`news, ${article.category}, ${language === 'kn' ? 'ಕನ್ನಡ' : 'English'}, Edens News`} />
             </Helmet>
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <article>
-                    <header className="mb-8">
-                        {article.category && <Badge className="mb-4">{String(article.category).replace(/\b\w/g, c => c.toUpperCase())}</Badge>}
-                        <h1 className={`text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight mb-4 ${language === 'kn' ? 'font-kannada' : ''}`}>{title}</h1>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-gray-500 dark:text-gray-400">
-                           <div className="flex items-center gap-2"><UserIcon className="w-5 h-5" /><span>{article.reporter || '—'}</span></div>
-                           <div className="flex items-center gap-2"><Clock className="w-5 h-5" /><span>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'MMMM d, yyyy') : '-'; })()}</span></div>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-6 lg:pt-8 article-content-wrapper">
+                <article className="relative z-10 bg-white dark:bg-gray-800">
+                    <header className="mb-8 sm:mb-8 article-header-mobile">
+                        {article.category && <Badge className="mb-4 sm:mb-4 text-xs sm:text-sm">{String(article.category).replace(/\b\w/g, c => c.toUpperCase())}</Badge>}
+                        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight mb-4 sm:mb-4 relative ${language === 'kn' ? 'font-kannada' : ''}`}>{title}</h1>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-x-6 gap-y-1 text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                           <div className="flex items-center gap-2"><UserIcon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => {
+                               if (language === 'kn') return article.reporter_kn || article.reporter || '—';
+                               if (language === 'en') return article.reporter_en || article.reporter || '—';
+                               if (language === 'ta') return article.reporter_ta || article.reporter || '—';
+                               if (language === 'te') return article.reporter_te || article.reporter || '—';
+                               if (language === 'hi') return article.reporter_hi || article.reporter || '—';
+                               if (language === 'ml') return article.reporter_ml || article.reporter || '—';
+                               return article.reporter || '—';
+                           })()}</span></div>
+                           <div className="flex items-center gap-2"><Clock className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'MMMM d, yyyy') : '-'; })()}</span></div>
                         </div>
                     </header>
 
-                    <img src={article.image_url} alt={title} className="w-full rounded-2xl shadow-lg mb-8" onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="100%" height="100%" fill="%23eeeeee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23777" font-family="Arial" font-size="24">Image not available</text></svg>'; }} />
+                    <img src={article.image_url} alt={title} className="w-full rounded-xl sm:rounded-2xl shadow-lg mb-6 sm:mb-6 mt-4" onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="100%" height="100%" fill="%23eeeeee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23777" font-family="Arial" font-size="24">Image not available</text></svg>'; }} />
 
-                    {/* In-content AdSense Ad */}
-                    <div className="my-8 text-center">
-                      <AdSenseAd
-                        slot="9876543210"
-                        format="rectangle"
-                        style={{ display: 'block', margin: '0 auto', minHeight: '250px' }}
-                        className="mb-8"
-                      />
-                    </div>
-                    <div className="flex items-center justify-end gap-2 mb-8">
-                        <Button variant="outline" onClick={handleBookmark} disabled={userLoading}>
-                            <Bookmark className={`w-5 h-5 mr-2 transition-colors ${isBookmarked ? 'text-orange-500 fill-current' : ''}`} />
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-2 mb-6 sm:mb-8">
+                        <Button variant="outline" onClick={handleBookmark} disabled={userLoading} className="w-full sm:w-auto justify-center sm:justify-start">
+                            <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 mr-2 transition-colors ${isBookmarked ? 'text-orange-500 fill-current' : ''}`} />
                             {isBookmarked ? 'Bookmarked' : 'Bookmark'}
                         </Button>
-                        <Button variant="outline" onClick={handleShare}>
-                            <Share2 className="w-5 h-5 mr-2" />
+                        <Button variant="outline" onClick={handleShare} className="w-full sm:w-auto justify-center sm:justify-start">
+                            <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                             Share
                         </Button>
-                        <a href={fbHref} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Facebook</Button>
+                        <a href={fbHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                            <Button variant="outline" className="w-full">Facebook</Button>
                         </a>
-                        <a href={twHref} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">Twitter</Button>
+                        <a href={twHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                            <Button variant="outline" className="w-full">Twitter</Button>
                         </a>
-                        <a href={waHref} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline">WhatsApp</Button>
-                            </a>
+                        <a href={waHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                            <Button variant="outline" className="w-full">WhatsApp</Button>
+                        </a>
                     </div>
 
-                    <div className={`prose prose-lg dark:prose-invert max-w-none ${language === 'kn' ? 'font-kannada' : ''}`} dangerouslySetInnerHTML={{ __html: content }}></div>
+                    <div className={`prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none ${language === 'kn' ? 'font-kannada' : ''}`} dangerouslySetInnerHTML={{ __html: content }}></div>
 
-                    {/* Post-content AdSense Ad */}
-                    <div className="mt-12 mb-8 text-center border-t border-gray-200 dark:border-gray-700 pt-8">
-                      <AdSenseAd
-                        slot="1357924680"
-                        format="rectangle"
-                        style={{ display: 'block', margin: '0 auto', minHeight: '250px' }}
-                        className="mb-4"
-                      />
-                    </div>
                 </article>
             </div>
         </div>

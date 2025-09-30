@@ -10,7 +10,6 @@ import LanguageToggle from '@/components/ui/LanguageToggle';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/LanguageContext';
 import { Badge } from '@/components/ui/badge';
-import AdSenseAd from '@/components/AdSenseAd';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,8 +110,8 @@ export default function Header() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-b border-red-700/80 shadow-lg transition-all duration-300">
+    <div>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-lg border-b border-red-700/80 shadow-lg transition-all duration-300 pointer-events-auto">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20 relative">
             {/* Logo */}
@@ -376,18 +375,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
-      {/* Header AdSense Banner */}
-      <div className="bg-gray-900/95 backdrop-blur-sm border-b border-gray-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-          <AdSenseAd
-            slot="1234567890"
-            format="horizontal"
-            className="mx-auto"
-            style={{ display: 'block', textAlign: 'center', minHeight: '90px' }}
-          />
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
