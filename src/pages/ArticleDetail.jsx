@@ -210,8 +210,8 @@ Shared from Edens News`;
     const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
     const shareImage = article.image_url && article.image_url.startsWith('http') ? article.image_url : `${siteUrl}${article.image_url || ''}`;
-    // Use Netlify function URL for OG previews when sharing, with fallback
-    const ogShareUrl = shareImage && shareImage !== `${siteUrl}/` ? `${siteUrl}/.netlify/functions/share-og?id=${article.id}` : shareImage;
+    // Use Netlify function URL for OG previews when sharing - this provides better caching and ensures images are accessible
+    const ogShareUrl = shareImage ? `${siteUrl}/.netlify/functions/share-og?id=${article.id}` : null;
     const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     
@@ -238,7 +238,7 @@ Shared from Edens News`;
                 {article.category && <meta property="article:section" content={String(article.category)} />}
 
                 {/* Image meta tags */}
-                {ogShareUrl && ogShareUrl !== siteUrl && (
+                {ogShareUrl && (
                     <>
                         <meta property="og:image" content={ogShareUrl} />
                         <meta property="og:image:secure_url" content={ogShareUrl} />
@@ -254,8 +254,8 @@ Shared from Edens News`;
                 <meta name="twitter:site" content="@edensnews" />
                 <meta name="twitter:title" content={title} />
                 <meta name="twitter:description" content={shareDesc} />
-                {ogShareUrl && ogShareUrl !== siteUrl && <meta name="twitter:image" content={ogShareUrl} />}
-                {ogShareUrl && ogShareUrl !== siteUrl && <meta name="twitter:image:alt" content={title} />}
+                {ogShareUrl && <meta name="twitter:image" content={ogShareUrl} />}
+                {ogShareUrl && <meta name="twitter:image:alt" content={title} />}
 
                 {/* WhatsApp specific meta tags */}
                 <meta property="og:image:type" content="image/jpeg" />

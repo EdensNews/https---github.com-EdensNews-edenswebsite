@@ -39,18 +39,21 @@ export const handler = async (event) => {
     const title = article.title_en || article.title_kn || 'Edens News';
     const description = stripHtml(article.content_en || article.content_kn || '').slice(0, 160) || 'Edens News';
 
-    // Ensure absolute image URL
+    // Ensure absolute image URL - prioritize direct image access for better Facebook compatibility
     const siteOrigin = process.env.PUBLIC_SITE_ORIGIN || 'https://edensnews.netlify.app';
     let imageAbsolute = null;
-    
+
     if (article.image_url) {
       if (/^https?:/i.test(article.image_url)) {
-        // Already absolute URL
+        // Already absolute URL - use directly for better Facebook compatibility
         imageAbsolute = article.image_url;
       } else {
         // Relative URL, make it absolute
         imageAbsolute = `${siteOrigin}${article.image_url.startsWith('/') ? '' : '/'}${article.image_url}`;
       }
+    } else {
+      // Fallback to a default image if article has no image
+      imageAbsolute = `https://base44.com/logo_v2.svg`;
     }
 
     const canonical = `${siteOrigin}/articledetail?id=${encodeURIComponent(id)}`;
@@ -90,7 +93,7 @@ export const handler = async (event) => {
   <noscript>
     <a href="${canonical}">Continue to article</a>
   </noscript>
-  ${isDevelopment ? '<div style="position: fixed; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 10px; border-radius: 5px; font-family: Arial; font-size: 12px; z-index: 9999;">Development Mode - OG Preview</div>' : ''}
+  ${isDevelopment ? `<div style="position: fixed; top: 10px; right: 10px; background: #ff6b6b; color: white; padding: 10px; border-radius: 5px; font-family: Arial; font-size: 12px; z-index: 9999;">Development Mode - OG Preview<br>Image: ${imageAbsolute || 'None'}<br>Title: ${title}</div>` : ''}
 </body>
 </html>`;
 

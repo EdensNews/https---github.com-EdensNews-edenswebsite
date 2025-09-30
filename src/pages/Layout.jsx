@@ -158,11 +158,23 @@ export default function Layout({ children }) {
               background: linear-gradient(45deg, #b91c1c, #f59e0b);
             }
 
-            /* Responsive utilities */
-            @media (max-width: 640px) {
-              .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
+            /* Mobile touch improvements */
+            @media (max-width: 768px) {
+              /* Ensure touch targets are at least 44px */
+              button, a, [role="button"] {
+                min-height: 44px;
+                min-width: 44px;
+              }
+
+              /* Improve touch feedback */
+              button:active, [role="button"]:active {
+                transform: scale(0.98);
+                transition: transform 0.1s ease;
+              }
+
+              /* Remove tap highlight on mobile */
+              * {
+                -webkit-tap-highlight-color: transparent;
               }
             }
 

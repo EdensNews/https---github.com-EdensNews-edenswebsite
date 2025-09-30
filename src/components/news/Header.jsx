@@ -239,8 +239,31 @@ export default function Header() {
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <button aria-label="Open menu" className="md:hidden w-10 h-10 flex items-center justify-center rounded-md hover:bg-red-900/20 active:bg-red-900/30">
-                  <Menu className="w-5 h-5" />
+                <button
+                  aria-label="Open menu"
+                  className="md:hidden w-12 h-12 flex items-center justify-center rounded-lg hover:bg-red-900/20 active:bg-red-900/30 transition-colors touch-manipulation select-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  style={{
+                    minWidth: '48px',
+                    minHeight: '48px',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(153, 27, 27, 0.3)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(153, 27, 27, 0.3)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '';
+                  }}
+                >
+                  <Menu className="w-6 h-6" />
                 </button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 overflow-y-auto">
