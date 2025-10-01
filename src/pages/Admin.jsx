@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '@/components/LanguageContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss, RefreshCw, ChartBar } from 'lucide-react';
+import { PenTool, Radio, FileText, Settings, BarChart3, Upload, Rss, RefreshCw, ChartBar, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const adminSections = [
@@ -27,6 +27,13 @@ const adminSections = [
         icon: Radio,
         page: 'AdminStream',
         color: 'from-red-500 to-red-600'
+    },
+    {
+        title: { kn: 'ಪ್ರಸಾರ ವೇಳಾಪಟ್ಟಿ', en: 'Broadcast Schedule' },
+        description: { kn: 'ಲೈವ್ ಟಿವಿ ವೇಳಾಪಟ್ಟಿಯನ್ನು ನಿರ್ವಹಿಸಿ', en: 'Manage live TV broadcast schedule' },
+        icon: Calendar,
+        page: 'AdminSchedule',
+        color: 'from-pink-500 to-pink-600'
     },
     {
         title: { kn: 'ವರ್ಗಗಳು', en: 'Categories' },

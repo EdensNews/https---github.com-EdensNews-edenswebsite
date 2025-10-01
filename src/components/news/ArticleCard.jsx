@@ -207,35 +207,40 @@ Shared from Edens News`;
     };
 
     return (
-        <div className="block group">
+        <div className="block group animate-slide-up-fade hover-float">
             <Link to={createPageUrl(`ArticleDetail?id=${article.id}`)} className="block">
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-2xl dark:shadow-gray-900/30 transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02] border border-gray-100 dark:border-gray-700 h-full flex flex-col">
-                    <div className="relative overflow-hidden">
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-2xl dark:shadow-gray-900/30 transition-elastic transform hover:-translate-y-2 hover:scale-[1.02] border border-gray-100 dark:border-gray-700 h-full flex flex-col relative shimmer-effect">
+                    <div className="relative overflow-hidden transform-3d">
                         <img 
                             src={article.image_url} 
                             alt={title} 
                             className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700" 
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        {/* Extremely subtle shimmer overlay on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/2 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-2000"></div>
                         {isBreaking && (
-                            <Badge className="absolute top-3 right-3 bg-red-600 text-white font-bold animate-pulse shadow-lg">
-                                <span className={language === 'kn' ? 'font-kannada' : ''}>
+                            <Badge className="absolute top-3 right-3 bg-red-600 text-white font-bold animate-breaking-pulse shadow-lg" style={{ boxShadow: '0 0 10px rgba(239, 68, 68, 0.3)' }}>
+                                <span className={`${language === 'kn' ? 'font-kannada' : ''}`} style={{ textShadow: '0 0 5px rgba(255, 255, 255, 0.3)' }}>
                                     {language === 'kn' ? 'ಬ್ರೇಕಿಂಗ್' : 'BREAKING'}
                                 </span>
+                                {/* Subtle sparkle effects */}
+                                <div className="sparkle" style={{ top: '-5px', right: '-5px', animationDelay: '0s', opacity: '0.5' }}></div>
+                                <div className="sparkle" style={{ bottom: '-5px', left: '-5px', animationDelay: '0.7s', opacity: '0.5' }}></div>
                             </Badge>
                         )}
                         {viewCount > 0 && (
-                            <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                <Eye className="w-3 h-3" />
-                                <span>{viewCount}</span>
+                            <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 glass-effect animate-zoom-in">
+                                <Eye className="w-3 h-3 animate-pulse" style={{ animationDuration: '3s' }} />
+                                <span className="font-semibold">{viewCount}</span>
                             </div>
                         )}
                     </div>
                     <div className="p-5 space-y-3 flex-1 flex flex-col">
-                        <Badge className={`${categoryColors[article.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'} transition-colors w-fit`}>
+                        <Badge className={`${categoryColors[article.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'} transition-bounce w-fit hover:scale-110`}>
                             {categoryText}
                         </Badge>
-                        <h3 className={`font-bold text-lg leading-snug text-gray-800 dark:text-gray-200 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors duration-300 flex-1 ${language === 'kn' ? 'font-kannada' : ''} line-clamp-3`}>
+                        <h3 className={`font-bold text-lg leading-snug text-gray-800 dark:text-gray-200 group-hover:text-red-600 dark:group-hover:text-red-400 transition-smooth flex-1 ${language === 'kn' ? 'font-kannada' : ''} line-clamp-3 ${isBreaking ? 'animate-breaking-flash' : ''}`} style={isBreaking ? { animationDuration: '3s' } : {}}>
                             {title}
                         </h3>
                         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-auto">
@@ -251,15 +256,15 @@ Shared from Edens News`;
                             </div>
                         </div>
                     </div>
-                    <div className="h-1 bg-gradient-to-r from-red-500 to-yellow-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left gradient-animate"></div>
                 </div>
             </Link>
             <div className="mt-2 flex justify-end">
                 <button 
                     onClick={handleShare}
-                    className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+                    className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 transition-bounce hover:scale-110 ripple-effect"
                 >
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-4 h-4 hover-wiggle" />
                     <span>Share</span>
                 </button>
             </div>

@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, User as UserIcon, Bookmark, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
+import ArticleReactions from '@/components/ArticleReactions';
+import TextToSpeech from '@/components/TextToSpeech';
 // toast removed per request
 
 function useQuery() {
@@ -24,6 +26,7 @@ export default function ArticleDetail() {
     const [isLoading, setIsLoading] = useState(true);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [hasTrackedView, setHasTrackedView] = useState(false);
+    const [readProgress, setReadProgress] = useState(0);
     const { user, isLoading: userLoading } = useLanguage();
 
     const query = useQuery();
@@ -168,6 +171,18 @@ export default function ArticleDetail() {
             if (translateAbortRef.current) translateAbortRef.current.aborted = true;
         };
     }, [language, article, translated]);
+
+    // Reading Progress Bar
+    useEffect(() => {
+        const handleScroll = () => {
+            const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (window.scrollY / totalHeight) * 100;
+            setReadProgress(Math.min(progress, 100));
+        };
+        
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleBookmark = async () => {
         if (!user) return;
@@ -322,6 +337,20 @@ Shared from Edens News`;
 
     return (
         <div className="bg-white dark:bg-gray-800 relative z-20">
+            {/* Reading Progress Bar - Below Header */}
+            <div className="fixed top-[60px] sm:top-[70px] left-0 right-0 h-1 bg-gray-300 dark:bg-gray-700 z-[9999] pointer-events-none shadow-lg">
+                <div 
+                    className="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-150 ease-out"
+                    style={{ 
+                        width: `${readProgress}%`,
+                        boxShadow: '0 2px 4px rgba(220, 38, 38, 0.8), 0 0 30px rgba(220, 38, 38, 0.5)'
+                    }}
+                />
+            </div>
+            {/* Debug: Show progress percentage */}
+            <div className="fixed top-[65px] sm:top-[75px] right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold z-[9999] pointer-events-none shadow-lg">
+                {Math.round(readProgress)}%
+            </div>
             <style>
                 {`
                     /* Mobile-only spacing for ArticleDetail to clear header + ticker */
@@ -410,6 +439,9 @@ Shared from Edens News`;
 
                     <img src={article.image_url} alt={title} className="w-full rounded-xl sm:rounded-2xl shadow-lg mb-6 sm:mb-6 mt-4" onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630"><rect width="100%" height="100%" fill="%23eeeeee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23777" font-family="Arial" font-size="24">Image not available</text></svg>'; }} />
 
+                    {/* Text-to-Speech */}
+                    <TextToSpeech text={content} title={title} />
+
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-2 mb-6 sm:mb-8">
                         <Button variant="outline" onClick={handleBookmark} disabled={userLoading} className="w-full sm:w-auto justify-center sm:justify-start">
                             <Bookmark className={`w-4 h-4 sm:w-5 sm:h-5 mr-2 transition-colors ${isBookmarked ? 'text-orange-500 fill-current' : ''}`} />
@@ -431,6 +463,9 @@ Shared from Edens News`;
                     </div>
 
                     <div className={`prose prose-sm sm:prose-base lg:prose-lg dark:prose-invert max-w-none ${language === 'kn' ? 'font-kannada' : ''}`} dangerouslySetInnerHTML={{ __html: content }}></div>
+
+                    {/* Article Reactions */}
+                    <ArticleReactions articleId={article.id} />
 
                 </article>
             </div>

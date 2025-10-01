@@ -72,33 +72,50 @@ export default function BreakingMarquee() {
     return (
         <div className="fixed top-14 sm:top-16 lg:top-20 left-0 right-0 z-40 overflow-hidden min-h-[48px]">
             {/* Animated background with multiple layers */}
-            <div className="relative bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-2 shadow-2xl min-h-[48px]">
+            <div className="relative bg-gradient-to-r from-red-600 via-red-500 to-red-600 text-white py-2 shadow-2xl min-h-[48px] gradient-animate">
+                {/* Particles effect */}
+                <div className="particles absolute inset-0">
+                    <div className="particle" style={{ left: '10%' }}></div>
+                    <div className="particle" style={{ left: '30%' }}></div>
+                    <div className="particle" style={{ left: '50%' }}></div>
+                    <div className="particle" style={{ left: '70%' }}></div>
+                    <div className="particle" style={{ left: '90%' }}></div>
+                </div>
+                
                 {/* Shiny overlay effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
                 
-                {/* Animated border */}
-                <div className="absolute inset-0 border-t-2 border-b-2 border-yellow-400/50"></div>
+                {/* Animated rainbow border */}
+                <div className="absolute inset-0 border-t-2 border-b-2 rainbow-border-animate"></div>
                 
-                {/* Moving light effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-shimmer"></div>
+                {/* Moving light effect - faster wave */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-breaking-wave" style={{ animationDuration: '2s' }}></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent shimmer-effect"></div>
                 
                 <div className="flex items-center relative z-10">
                     {/* Enhanced breaking news label */}
-                    <div className={`flex items-center gap-2 px-4 py-1 ${style} font-bold text-sm rounded-r-full relative z-10 flex-shrink-0 shadow-lg`}>
-                        <Icon className={`w-4 h-4 ${iconClass}`} />
-                        <span className={language === 'kn' ? 'font-kannada' : ''}>{text}</span>
-                        {/* Glowing effect for breaking news */}
+                    <div className={`flex items-center gap-2 px-4 py-1 ${style} font-bold text-sm rounded-r-full relative z-10 flex-shrink-0 shadow-lg ${marqueeType === 'breaking' ? 'animate-breaking-pulse glow-yellow' : ''}`}>
+                        <Icon className={`w-4 h-4 ${iconClass} ${marqueeType === 'breaking' ? 'animate-breaking-shake' : ''}`} />
+                        <span className={`${language === 'kn' ? 'font-kannada' : ''} ${marqueeType === 'breaking' ? 'text-glow-animate' : ''}`}>{text}</span>
+                        {/* Multiple glowing effects for breaking news */}
                         {marqueeType === 'breaking' && (
-                            <div className="absolute inset-0 rounded-r-full bg-yellow-400/20 animate-ping"></div>
+                            <>
+                                <div className="absolute inset-0 rounded-r-full bg-yellow-400/20 animate-ping"></div>
+                                <div className="absolute inset-0 rounded-r-full animate-breaking-glow"></div>
+                                {/* Sparkles */}
+                                <div className="sparkle" style={{ top: '20%', right: '10%', animationDelay: '0s' }}></div>
+                                <div className="sparkle" style={{ top: '60%', right: '30%', animationDelay: '0.5s' }}></div>
+                            </>
                         )}
                     </div>
                     
                     {/* Enhanced alert badge */}
                     {marqueeType === 'breaking' && (
-                        <div className="ml-2 px-3 py-1 bg-gradient-to-r from-red-700 to-red-600 text-white text-xs font-extrabold rounded-full shadow-lg animate-bounce border border-yellow-400/50">
-                            <span className="relative">
+                        <div className="ml-2 px-3 py-1 bg-gradient-to-r from-red-700 to-red-600 text-white text-xs font-extrabold rounded-full shadow-lg animate-heartbeat border border-yellow-400/50 glow-red">
+                            <span className="relative neon-text">
                                 ALERT
                                 <div className="absolute inset-0 bg-yellow-400/30 rounded-full animate-pulse"></div>
+                                <div className="absolute inset-0 bg-red-500/20 rounded-full animate-breaking-flash"></div>
                             </span>
                         </div>
                     )}
@@ -110,13 +127,14 @@ export default function BreakingMarquee() {
                                 <span key={article.id} className="inline-flex items-center gap-4 mr-8">
                                     <Link 
                                         to={createPageUrl(`ArticleDetail?id=${article.id}`)}
-                                        className={`hover:text-yellow-200 transition-all duration-300 hover:scale-105 ${language === 'kn' ? 'font-kannada' : ''} relative group`}
+                                        className={`hover:text-yellow-200 transition-smooth hover:scale-105 ${language === 'kn' ? 'font-kannada' : ''} relative group ${marqueeType === 'breaking' ? 'font-bold' : ''}`}
                                     >
-                                        <span className="relative z-10">
+                                        <span className="relative z-10 ${marqueeType === 'breaking' ? 'animate-breaking-flash' : ''}">
                                             {getTitle(article)}
                                         </span>
-                                        {/* Hover glow effect */}
-                                        <div className="absolute inset-0 bg-yellow-400/20 rounded scale-0 group-hover:scale-100 transition-transform duration-300"></div>
+                                        {/* Enhanced hover glow effect */}
+                                        <div className="absolute inset-0 bg-yellow-400/20 rounded scale-0 group-hover:scale-100 transition-elastic"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-300/40 to-transparent scale-0 group-hover:scale-100 shimmer-effect"></div>
                                     </Link>
                                     <div className="flex items-center gap-1 text-red-200 text-xs">
                                         <Clock className="w-3 h-3 animate-pulse" />

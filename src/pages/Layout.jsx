@@ -6,6 +6,7 @@ import { LanguageProvider } from "../components/LanguageContext";
 import Header from "../components/news/Header";
 import BreakingMarquee from "../components/news/BreakingMarquee";
 import Footer from "../components/news/Footer";
+import MobileBottomNav from "../components/MobileBottomNav";
 import { Toaster } from "@/components/ui/toaster";
 
 export default function Layout({ children }) {
@@ -223,6 +224,7 @@ export default function Layout({ children }) {
           </div>
         </main>
         <Footer />
+        <MobileBottomNav />
         <Toaster />
       </div>
     </LanguageProvider>

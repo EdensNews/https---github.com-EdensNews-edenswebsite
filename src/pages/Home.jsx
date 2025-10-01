@@ -4,6 +4,7 @@ import { articlesRepo } from '@/api/repos/articlesRepo';
 import { analyticsRepo } from '@/api/repos/analyticsRepo';
 import { useLanguage } from '@/components/LanguageContext';
 import ArticleCard from '@/components/news/ArticleCard';
+import HeroSection from '@/components/news/HeroSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from 'react-router-dom';
 
@@ -115,25 +116,36 @@ export default function Home() {
                 <meta name="twitter:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
             </Helmet>
 
-            <h2 className="text-2xl mb-8 font-extrabold text-center dark:text-gray-100">
-                {pageTitle}
+            {/* Hero Section - Show only on home page (no category filter) */}
+            {!category && articles.length > 0 && (
+                <HeroSection article={articles[0]} />
+            )}
+
+            <h2 className="text-2xl mb-8 font-extrabold text-center dark:text-gray-100 animate-slide-up-fade">
+                <span className="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent gradient-animate">
+                    {pageTitle}
+                </span>
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {isLoading ?
         Array.from({ length: 8 }).map((_, index) =>
-        <div key={index} className="space-y-4">
-                            <Skeleton className="h-48 w-full rounded-xl" />
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-3/4" />
+        <div key={index} className={`space-y-4 animate-slide-up-fade stagger-${(index % 8) + 1}`}>
+                            <Skeleton className="h-48 w-full rounded-xl skeleton-shimmer" />
+                            <Skeleton className="h-4 w-1/4 skeleton-shimmer" />
+                            <Skeleton className="h-6 w-full skeleton-shimmer" />
+                            <Skeleton className="h-6 w-3/4 skeleton-shimmer" />
                         </div>
         ) :
 
         articles && articles.length > 0 ? (
-          articles.map((article) =>
-            <ArticleCard key={article.id} article={article} />
-          )
+          articles
+            .slice(category ? 0 : 1) // Skip first article on home page (shown in hero)
+            .map((article, index) =>
+              <div key={article.id} className={`stagger-${(index % 8) + 1}`}>
+                <ArticleCard article={article} />
+              </div>
+            )
         ) : (
           <div className="col-span-full text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
