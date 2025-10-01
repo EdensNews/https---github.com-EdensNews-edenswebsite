@@ -84,6 +84,18 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <style>
+                {`
+                    /* Mobile-only spacing for Home page to clear header + ticker */
+                    @media screen and (max-width: 640px) {
+                        .home-page-wrapper {
+                            height: 120px !important;
+                            display: block !important;
+                        }
+                    }
+                `}
+            </style>
+            <div className="home-page-wrapper"></div>
             <Helmet>
                 <title>{`${pageTitle} | Edens News`}</title>
                 <meta name="description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news in Kannada, English, Tamil, Telugu, Hindi, and Malayalam.`} />

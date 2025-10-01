@@ -294,6 +294,47 @@ function AdminWriteContent() {
         setIsTranslating(false);
     };
 
+    const handleTranslateReporterNames = async () => {
+        // Find which reporter field has content
+        const sourceReporter = article.reporter_en || article.reporter_kn || article.reporter;
+        if (!sourceReporter) {
+            toast({ title: "Please enter a reporter name first", variant: "destructive" });
+            return;
+        }
+        
+        setIsTranslating(true);
+        try {
+            const translationResult = await InvokeLLM({
+                prompt: `Translate the reporter name "${sourceReporter}" to Kannada, Tamil, Telugu, Hindi, Malayalam, and English. Keep it as a proper name translation. Provide the translation in this exact JSON format: {"reporter_kn": "Kannada name", "reporter_en": "English name", "reporter_ta": "Tamil name", "reporter_te": "Telugu name", "reporter_hi": "Hindi name", "reporter_ml": "Malayalam name"}`,
+                response_json_schema: { 
+                    type: "object", 
+                    properties: { 
+                        reporter_kn: { type: "string" }, 
+                        reporter_en: { type: "string" },
+                        reporter_ta: { type: "string" },
+                        reporter_te: { type: "string" },
+                        reporter_hi: { type: "string" },
+                        reporter_ml: { type: "string" }
+                    } 
+                }
+            });
+            setArticle(prev => ({ 
+                ...prev, 
+                reporter_kn: translationResult.reporter_kn || prev.reporter_kn,
+                reporter_en: translationResult.reporter_en || prev.reporter_en,
+                reporter_ta: translationResult.reporter_ta || prev.reporter_ta,
+                reporter_te: translationResult.reporter_te || prev.reporter_te,
+                reporter_hi: translationResult.reporter_hi || prev.reporter_hi,
+                reporter_ml: translationResult.reporter_ml || prev.reporter_ml
+            }));
+            toast({ title: "Reporter name translated to all languages" });
+        } catch (error) {
+            console.error('Reporter translation failed:', error);
+            toast({ title: "Translation failed. Please try again.", variant: "destructive" });
+        }
+        setIsTranslating(false);
+    };
+
     const handleTranslateToKannada = async () => {
         if (!article.title_en || !article.content_en) {
             toast({ title: "Please enter English title and content first", variant: "destructive" });
@@ -753,7 +794,19 @@ Title: ${article.title_kn}. Content: ${article.content_kn}`,
                                     )}
                                 </div>
                                 <div className="space-y-4">
-                                    <Label className="dark:text-gray-300 text-lg font-semibold">{language === 'kn' ? 'ವರದಿಗಾರ ಹೆಸರು (ಎಲ್ಲಾ ಭಾಷೆಗಳಲ್ಲಿ)' : 'Reporter Name (All Languages)'}</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="dark:text-gray-300 text-lg font-semibold">{language === 'kn' ? 'ವರದಿಗಾರ ಹೆಸರು (ಎಲ್ಲಾ ಭಾಷೆಗಳಲ್ಲಿ)' : 'Reporter Name (All Languages)'}</Label>
+                                        <Button 
+                                            type="button"
+                                            onClick={handleTranslateReporterNames} 
+                                            disabled={isTranslating}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <Languages className="w-4 h-4 mr-2" />
+                                            {isTranslating ? (language === 'kn' ? 'ಅನುವಾದ ಮಾಡಲಾಗುತ್ತಿದೆ...' : 'Translating...') : (language === 'kn' ? 'ಎಲ್ಲಾ ಭಾಷೆಗಳಿಗೆ ಅನುವಾದಿಸಿ' : 'Translate to All Languages')}
+                                        </Button>
+                                    </div>
                                     
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
