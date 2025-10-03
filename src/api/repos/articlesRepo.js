@@ -36,9 +36,9 @@ export const articlesRepo = {
     // Join via article_categories and categories
     const { data, error } = await supabase
       .from('articles')
-      .select('*, article_categories!inner(category_id), categories:article_categories(category_id, categories!inner(slug))')
+      .select('*, article_categories!inner(categories!inner(slug))')
       .eq('status', 'published')
-      .eq('categories.slug', slug)
+      .eq('article_categories.categories.slug', slug)
       .order('published_at', { ascending: false })
       .range(offset, offset + limit - 1)
     if (error) throw error

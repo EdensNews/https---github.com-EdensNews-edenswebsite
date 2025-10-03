@@ -61,9 +61,9 @@ export default function HeroSection({ article }) {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1500"></div>
 
                     {/* Content */}
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12">
+                    <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12 pt-8 md:pt-10 lg:pt-16 pb-10 md:pb-22 lg:pb-20">
                         {/* Badges Row */}
-                        <div className="flex flex-wrap items-center gap-2 mb-6">
+                        <div className={`flex flex-wrap items-center gap-2 ${language === 'kn' ? 'mb-12 md:mb-16 lg:mb-20' : 'mb-8 md:mb-12 lg:mb-14'}`}>
                             <Badge className="bg-red-600 text-white font-bold px-3 py-1 text-xs md:text-sm animate-breaking-pulse shadow-lg">
                                 <TrendingUp className="w-3 h-3 md:w-4 md:h-4 mr-1 inline" />
                                 {language === 'kn' ? 'ವೈಶಿಷ್ಟ್ಯಗೊಳಿಸಲಾಗಿದೆ' : 'FEATURED'}
@@ -78,14 +78,14 @@ export default function HeroSection({ article }) {
                             )}
                         </div>
 
-                        {/* Title - Better spacing and sizing */}
-                        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 md:mb-6 leading-tight ${language === 'kn' ? 'font-kannada' : ''} line-clamp-2 md:line-clamp-3 group-hover:text-red-400 transition-colors duration-300 drop-shadow-lg`}>
+                        {/* Title - Better spacing and sizing for desktop */}
+                        <h1 className={`text-3xl sm:text-2xl md:text-3xl lg:text-2xl font-extrabold text-white ${language === 'kn' ? 'mt-0 font-kannada leading-[1.6] whitespace-normal mb-4 md:mb-6 lg:mb-8 line-clamp-2' : 'mt-0 leading-tight mb-3 md:mb-5 line-clamp-2'} break-words group-hover:text-red-400 transition-colors duration-300 drop-shadow-lg`}>
                             {title}
                         </h1>
 
                         {/* Excerpt */}
                         {excerpt && (
-                            <p className={`text-gray-200 text-base md:text-lg lg:text-xl mb-6 line-clamp-2 max-w-4xl ${language === 'kn' ? 'font-kannada' : ''}`}>
+                            <p className={`text-gray-200 text-base md:text-lg lg:text-xl mb-6 line-clamp-2 max-w-4xl ${language === 'kn' ? 'font-kannada leading-relaxed' : ''}`}>
                                 {excerpt}
                             </p>
                         )}

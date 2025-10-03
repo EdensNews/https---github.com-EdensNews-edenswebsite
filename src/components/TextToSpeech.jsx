@@ -53,6 +53,21 @@ export default function TextToSpeech({ text, title }) {
         }
     }, [language, text, title]);
 
+    // Cleanup: Stop audio when component unmounts (user leaves page)
+    useEffect(() => {
+        return () => {
+            // Stop Google TTS audio
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+            // Stop browser TTS
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, []);
+
     const getVoiceForLanguage = () => {
         const voices = window.speechSynthesis.getVoices();
         
