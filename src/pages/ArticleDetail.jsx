@@ -273,7 +273,8 @@ Shared from Edens News`;
         }
     };
     const fbHref = (() => {
-        const url = encodeURIComponent(`${window.location.origin}/articledetail?id=${articleId}`);
+        // Use Netlify function URL for Facebook sharing to ensure proper OG image meta tags
+        const url = encodeURIComponent(`${window.location.origin}/.netlify/functions/share-og?id=${articleId}`);
         return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
     })();
     const twHref = (() => {

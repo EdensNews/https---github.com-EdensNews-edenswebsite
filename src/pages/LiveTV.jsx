@@ -227,7 +227,7 @@ export default function LiveTV() {
                                 src={chatUrl}
                                 title="YouTube Live Chat"
                                 frameBorder="0"
-                                className="w-full h-[400px] sm:h-[500px] lg:h-[calc(100%-60px)]"
+                                className="w-full h-[600px] sm:h-[700px] lg:h-[calc(100%-60px)]"
                             ></iframe>
                         </div>
                     </div>
