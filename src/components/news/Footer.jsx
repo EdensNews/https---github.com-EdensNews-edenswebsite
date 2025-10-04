@@ -207,6 +207,21 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 lg:pt-8 mt-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+                        <Link 
+                            to="/terms" 
+                            className={`text-gray-400 hover:text-white transition-colors text-sm ${language === 'kn' ? 'font-kannada' : ''}`}
+                        >
+                            {language === 'kn' ? 'ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳು' : 'Terms & Conditions'}
+                        </Link>
+                        <span className="hidden sm:inline text-gray-600">|</span>
+                        <Link 
+                            to="/privacy" 
+                            className={`text-gray-400 hover:text-white transition-colors text-sm ${language === 'kn' ? 'font-kannada' : ''}`}
+                        >
+                            {language === 'kn' ? 'ಗೋಪ್ಯತಾ ನೀತಿ' : 'Privacy Policy'}
+                        </Link>
+                    </div>
                     <p className={`text-center text-gray-400 text-sm ${language === 'kn' ? 'font-kannada' : ''}`}>
                         {language === 'kn' ? settings.copyright_text_kn : settings.copyright_text_en}
                     </p>

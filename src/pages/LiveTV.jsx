@@ -216,8 +216,8 @@ export default function LiveTV() {
                 {/* Live Chat Sidebar - 1/3 width on desktop */}
                 {streamSettings?.is_live && chatUrl && (
                     <div className="lg:col-span-1">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-gray-200 dark:border-gray-700 h-full">
-                            <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 flex items-center gap-2">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-gray-200 dark:border-gray-700 flex flex-col" style={{ height: '800px' }}>
+                            <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white p-4 flex items-center gap-2 flex-shrink-0">
                                 <Signal className="w-5 h-5 animate-pulse" />
                                 <h3 className={`font-bold text-lg ${language === 'kn' ? 'font-kannada' : ''}`}>
                                     {language === 'kn' ? 'ಲೈವ್ ಚಾಟ್' : 'Live Chat'}
@@ -227,7 +227,7 @@ export default function LiveTV() {
                                 src={chatUrl}
                                 title="YouTube Live Chat"
                                 frameBorder="0"
-                                className="w-full h-[600px] sm:h-[700px] lg:h-[calc(100%-60px)]"
+                                className="w-full flex-1"
                             ></iframe>
                         </div>
                     </div>

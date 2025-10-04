@@ -32,6 +32,10 @@ import AdminAutoTranslate from "./AdminAutoTranslate";
 
 import AdminSchedule from "./AdminSchedule";
 
+import TermsAndConditions from "./TermsAndConditions";
+
+import PrivacyPolicy from "./PrivacyPolicy";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -67,6 +71,10 @@ const PAGES = {
     AdminAutoTranslate: AdminAutoTranslate,
     
     AdminSchedule: AdminSchedule,
+    
+    TermsAndConditions: TermsAndConditions,
+    
+    PrivacyPolicy: PrivacyPolicy,
     
 }
 
@@ -127,6 +135,10 @@ function PagesContent() {
                 <Route path="/adminautotranslate" element={<AdminAutoTranslate />} />
                 
                 <Route path="/adminschedule" element={<AdminSchedule />} />
+                
+                <Route path="/terms" element={<TermsAndConditions />} />
+                
+                <Route path="/privacy" element={<PrivacyPolicy />} />
                 
             </Routes>
         </Layout>
