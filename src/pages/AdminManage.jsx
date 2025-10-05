@@ -41,7 +41,7 @@ function AdminManageContent() {
     const fetchArticles = useCallback(async () => {
         setIsLoading(true);
         try {
-            const fetchedArticles = await articlesRepo.list({ limit: 50 });
+            const fetchedArticles = await articlesRepo.list({ limit: 20 }); // Reduced to save bandwidth
             setArticles(fetchedArticles);
         } catch (error) {
             console.error("Failed to fetch articles:", error);

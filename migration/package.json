@@ -1,0 +1,17 @@
+{
+  "name": "edensnews-migration",
+  "version": "1.0.0",
+  "description": "Migration scripts for Edens News from Supabase to PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "export": "node 02-export-supabase-data.js",
+    "import": "node 04-import-data.js",
+    "test-api": "node test-api.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.6.1",
+    "pg": "^8.11.3"
+  }
+}

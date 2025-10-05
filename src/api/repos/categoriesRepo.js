@@ -1,14 +1,9 @@
-import { supabase } from '@/api/supabaseClient'
-
-const TABLE = 'categories'
+import { db } from '@/api/databaseClient'
 
 export const categoriesRepo = {
   async list() {
     try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .select('id, name, slug')
-      if (error) throw error
+      const data = await db.getCategories()
       return data || []
     } catch (error) {
       console.error('[categoriesRepo] list error:', error)
@@ -18,13 +13,8 @@ export const categoriesRepo = {
 
   async getBySlug(slug) {
     try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .select('*')
-        .eq('slug', slug)
-        .maybeSingle()
-      if (error) throw error
-      return data
+      const categories = await db.getCategories()
+      return categories.find(cat => cat.slug === slug) || null
     } catch (error) {
       console.error('[categoriesRepo] getBySlug error:', error)
       throw error
@@ -32,47 +22,20 @@ export const categoriesRepo = {
   },
 
   async create(category) {
-    try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .insert(category)
-        .select()
-        .maybeSingle()
-      if (error) throw error
-      return data
-    } catch (error) {
-      console.error('[categoriesRepo] create error:', error)
-      throw error
-    }
+    // Category creation not implemented in API yet
+    console.warn('Category creation not yet implemented in new API')
+    throw new Error('Not implemented')
   },
 
   async update(id, updates) {
-    try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .maybeSingle()
-      if (error) throw error
-      return data
-    } catch (error) {
-      console.error('[categoriesRepo] update error:', error)
-      throw error
-    }
+    // Category update not implemented in API yet
+    console.warn('Category update not yet implemented in new API')
+    throw new Error('Not implemented')
   },
 
   async remove(id) {
-    try {
-      const { error } = await supabase
-        .from(TABLE)
-        .delete()
-        .eq('id', id)
-      if (error) throw error
-      return true
-    } catch (error) {
-      console.error('[categoriesRepo] remove error:', error)
-      throw error
-    }
+    // Category deletion not implemented in API yet
+    console.warn('Category deletion not yet implemented in new API')
+    throw new Error('Not implemented')
   }
 }

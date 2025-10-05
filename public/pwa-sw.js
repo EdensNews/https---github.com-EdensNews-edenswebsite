@@ -1,12 +1,11 @@
 // PWA Service Worker for Edens News
-const CACHE_NAME = 'edens-news-v1';
+const CACHE_NAME = 'edens-news-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
 const PRECACHE_ASSETS = [
   '/',
-  '/offline.html',
-  '/manifest.json'
+  '/offline.html'
 ];
 
 // Install event - cache essential assets
@@ -94,14 +93,14 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New breaking news!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: 'https://base44.com/logo_v2.svg',
+    badge: 'https://base44.com/logo_v2.svg',
     vibrate: [200, 100, 200],
     tag: 'breaking-news',
     requireInteraction: true,
     actions: [
-      { action: 'open', title: 'Read Now', icon: '/icons/icon-72x72.png' },
-      { action: 'close', title: 'Close', icon: '/icons/icon-72x72.png' }
+      { action: 'open', title: 'Read Now', icon: 'https://base44.com/logo_v2.svg' },
+      { action: 'close', title: 'Close', icon: 'https://base44.com/logo_v2.svg' }
     ]
   };
 

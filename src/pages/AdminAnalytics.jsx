@@ -41,7 +41,7 @@ function AdminAnalyticsContent() {
             // Try Supabase repo first (this is what the site uses in production)
             let articles = [];
             try {
-                articles = await articlesRepo.list({ limit: 1000 });
+                articles = await articlesRepo.list({ limit: 100 }); // Reduced from 1000 to save bandwidth
             } catch {}
             // Fallback to Base44 entities if Supabase is not configured
             if (!Array.isArray(articles) || articles.length === 0) {
