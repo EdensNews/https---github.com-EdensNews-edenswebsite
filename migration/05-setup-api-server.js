@@ -62,25 +62,48 @@ app.get('/api/articles', async (req, res) => {
     const { 
       limit = 20, 
       offset = 0, 
-      status = 'published'
+      status = 'published',
+      category
     } = req.query;
 
-    const cacheKey = `articles:${status}:${limit}:${offset}`;
+    const cacheKey = `articles:${status}:${category || 'all'}:${limit}:${offset}`;
     const cached = getCached(cacheKey);
     if (cached) {
       return res.json(cached);
     }
 
-    let query = `
-      SELECT id, title_en, title_kn, title_ta, title_te, title_hi, title_ml,
-             reporter, image_url, status, created_at, published_at, is_breaking
-      FROM articles
-      WHERE status = $1
-      ORDER BY published_at DESC 
-      LIMIT $2 OFFSET $3
-    `;
-    
-    const params = [status, limit, offset];
+    let query;
+    let params;
+
+    if (category) {
+      // Filter by category using article_categories join
+      query = `
+        SELECT DISTINCT a.id, a.title_en, a.title_kn, a.title_ta, a.title_te, a.title_hi, a.title_ml,
+               a.reporter, a.image_url, a.status, a.created_at, a.published_at, a.is_breaking,
+               c.name_en as category, c.name_kn as category_kn
+        FROM articles a
+        INNER JOIN article_categories ac ON a.id = ac.article_id
+        INNER JOIN categories c ON ac.category_id = c.id
+        WHERE a.status = $1 AND c.slug = $2
+        ORDER BY a.published_at DESC 
+        LIMIT $3 OFFSET $4
+      `;
+      params = [status, category, limit, offset];
+    } else {
+      // No category filter - use LEFT JOIN to get category if exists
+      query = `
+        SELECT a.id, a.title_en, a.title_kn, a.title_ta, a.title_te, a.title_hi, a.title_ml,
+               a.reporter, a.image_url, a.status, a.created_at, a.published_at, a.is_breaking,
+               c.name_en as category, c.name_kn as category_kn
+        FROM articles a
+        LEFT JOIN article_categories ac ON a.id = ac.article_id
+        LEFT JOIN categories c ON ac.category_id = c.id
+        WHERE a.status = $1
+        ORDER BY a.published_at DESC 
+        LIMIT $2 OFFSET $3
+      `;
+      params = [status, limit, offset];
+    }
 
     const result = await pool.query(query, params);
     setCache(cacheKey, result.rows);
@@ -185,16 +208,19 @@ app.get('/api/articles/search/:query', async (req, res) => {
     const { limit = 20 } = req.query;
     
     const searchQuery = `
-      SELECT id, title_en, title_kn, reporter, image_url, created_at
-      FROM articles
-      WHERE status = 'published'
+      SELECT a.id, a.title_en, a.title_kn, a.reporter, a.image_url, a.created_at,
+             c.name_en as category, c.name_kn as category_kn
+      FROM articles a
+      LEFT JOIN article_categories ac ON a.id = ac.article_id
+      LEFT JOIN categories c ON ac.category_id = c.id
+      WHERE a.status = 'published'
         AND (
-          title_en ILIKE $1 OR 
-          title_kn ILIKE $1 OR
-          content_en ILIKE $1 OR
-          content_kn ILIKE $1
+          a.title_en ILIKE $1 OR 
+          a.title_kn ILIKE $1 OR
+          a.content_en ILIKE $1 OR
+          a.content_kn ILIKE $1
         )
-      ORDER BY published_at DESC
+      ORDER BY a.published_at DESC
       LIMIT $2
     `;
     
@@ -211,6 +237,20 @@ app.get('/api/articles/search/:query', async (req, res) => {
 app.get('/api/categories', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM categories ORDER BY name_en');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get article categories
+app.get('/api/article-categories/:articleId', async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM article_categories WHERE article_id = $1',
+      [articleId]
+    );
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });

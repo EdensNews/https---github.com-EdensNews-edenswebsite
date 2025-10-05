@@ -74,7 +74,10 @@ export default function Header() {
       try {
         const rows = await categoriesRepo.list();
         if (Array.isArray(rows) && rows.length) {
-          setCategories(rows.map(r => ({ slug: r.slug, name: r.name || r.slug })));
+          setCategories(rows.map(r => ({ 
+            slug: r.slug, 
+            name: language === 'kn' ? (r.name_kn || r.name_en || r.slug) : (r.name_en || r.name_kn || r.slug)
+          })));
         } else {
           setCategories(fallbackCategoryLinks);
         }

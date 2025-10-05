@@ -6,6 +6,7 @@ import { useLanguage } from '@/components/LanguageContext';
 import ArticleCard from '@/components/news/ArticleCard';
 import HeroSection from '@/components/news/HeroSection';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
 
 function useQuery() {
@@ -15,49 +16,61 @@ function useQuery() {
 export default function Home() {
   const [articles, setArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const { language, isLoading: languageLoading } = useLanguage();
   const query = useQuery();
   const category = query.get('category');
+  const pageSize = 20;
+
+  const fetchArticles = async (pageNum = 0) => {
+    setIsLoading(true);
+    try {
+      const offset = pageNum * pageSize;
+      let fetchedArticles = [];
+      
+      if (category) {
+        const slug = String(category).toLowerCase();
+        fetchedArticles = await articlesRepo.listByCategory(slug, { limit: pageSize, offset });
+        if (!fetchedArticles || fetchedArticles.length === 0) {
+          // Fallback to latest if category has no results
+          fetchedArticles = await articlesRepo.list({ limit: pageSize, offset });
+        }
+      } else {
+        // Fetch 21 articles for home page on first page (1 for hero + 20 for grid)
+        const limit = pageNum === 0 ? pageSize + 1 : pageSize;
+        fetchedArticles = await articlesRepo.list({ limit, offset });
+      }
+      
+      // Load view counts for all articles
+      if (fetchedArticles.length > 0) {
+        const articleIds = fetchedArticles.map(article => article.id);
+        const viewCounts = await analyticsRepo.getViewCounts(articleIds);
+        
+        // Add view counts to articles
+        const articlesWithViews = fetchedArticles.map(article => ({
+          ...article,
+          views: viewCounts[article.id] || 0
+        }));
+        
+        setArticles(articlesWithViews);
+        setHasMore(fetchedArticles.length === (pageNum === 0 && !category ? pageSize + 1 : pageSize));
+        setPage(pageNum);
+      } else {
+        setArticles(fetchedArticles);
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch articles:", error);
+      setArticles([]);
+      setHasMore(false);
+    }
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    const fetchArticles = async () => {
-      setIsLoading(true);
-      try {
-        let fetchedArticles = [];
-        if (category) {
-          const slug = String(category).toLowerCase();
-          fetchedArticles = await articlesRepo.listByCategory(slug, { limit: 20 });
-          if (!fetchedArticles || fetchedArticles.length === 0) {
-            // Fallback to latest if category has no results
-            fetchedArticles = await articlesRepo.list({ limit: 20 });
-          }
-        } else {
-          fetchedArticles = await articlesRepo.list({ limit: 20 });
-        }
-        
-        // Load view counts for all articles
-        if (fetchedArticles.length > 0) {
-          const articleIds = fetchedArticles.map(article => article.id);
-          const viewCounts = await analyticsRepo.getViewCounts(articleIds);
-          
-          // Add view counts to articles
-          const articlesWithViews = fetchedArticles.map(article => ({
-            ...article,
-            views: viewCounts[article.id] || 0
-          }));
-          
-          setArticles(articlesWithViews);
-        } else {
-          setArticles(fetchedArticles);
-        }
-      } catch (error) {
-        console.error("Failed to fetch articles:", error);
-        // Set empty array to prevent infinite loading state
-        setArticles([]);
-      }
-      setIsLoading(false);
-    };
-    fetchArticles();
+    setPage(0);
+    fetchArticles(0);
   }, [category]);
 
   // Show loading while language preference is being loaded
@@ -155,6 +168,29 @@ export default function Home() {
         )
         }
             </div>
+
+            {/* Pagination */}
+            {!isLoading && articles.length > 0 && (
+                <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => fetchArticles(page - 1)}
+                        disabled={page === 0 || isLoading}
+                    >
+                        {language === 'kn' ? 'ಹಿಂದಿನದು' : 'Previous'}
+                    </Button>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {language === 'kn' ? `ಪುಟ ${page + 1}` : `Page ${page + 1}`}
+                    </span>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => fetchArticles(page + 1)}
+                        disabled={!hasMore || isLoading}
+                    >
+                        {language === 'kn' ? 'ಮುಂದಿನದು' : 'Next'}
+                    </Button>
+                </div>
+            )}
         </div>);
 
 }

@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { articlesRepo } from '@/api/repos/articlesRepo';
+import { categoriesRepo } from '@/api/repos/categoriesRepo';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useLanguage } from '@/components/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -33,26 +35,79 @@ export default function AdminManage() {
 
 function AdminManageContent() {
     const [articles, setArticles] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
     const { language } = useLanguage();
     const { toast } = useToast();
     const navigate = useNavigate();
+    const pageSize = 50;
 
-    const fetchArticles = useCallback(async () => {
+    const fetchArticles = useCallback(async (pageNum = 0) => {
         setIsLoading(true);
         try {
-            const fetchedArticles = await articlesRepo.list({ limit: 20 }); // Reduced to save bandwidth
-            setArticles(fetchedArticles);
+            const offset = pageNum * pageSize;
+            let fetchedArticles;
+            
+            // Fetch articles with optional category filter
+            const apiUrl = import.meta.env.VITE_API_URL || 'https://api.edensnews.com/api';
+            const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : '';
+            const response = await fetch(`${apiUrl}/articles?limit=${pageSize}&offset=${offset}&status=published${categoryParam}`);
+            fetchedArticles = await response.json();
+            
+            // Enrich articles with category names
+            const enrichedArticles = await Promise.all(
+                fetchedArticles.map(async (article) => {
+                    try {
+                        // Get article categories from article_categories table
+                        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://api.edensnews.com/api'}/article-categories/${article.id}`);
+                        if (response.ok) {
+                            const articleCats = await response.json();
+                            if (articleCats && articleCats.length > 0) {
+                                const category = categories.find(c => c.id === articleCats[0].category_id);
+                                return { ...article, categoryName: category ? (language === 'kn' ? category.name_kn : category.name_en) : '-' };
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error fetching category for article:', err);
+                    }
+                    return { ...article, categoryName: '-' };
+                })
+            );
+            
+            setArticles(enrichedArticles);
+            setHasMore(fetchedArticles.length === pageSize);
+            setPage(pageNum);
         } catch (error) {
             console.error("Failed to fetch articles:", error);
             toast({ title: "Error fetching articles", variant: "destructive" });
         }
         setIsLoading(false);
-    }, [toast]);
+    }, [toast, pageSize, selectedCategory, categories, language]);
 
     useEffect(() => {
         fetchArticles();
     }, [fetchArticles]);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const cats = await categoriesRepo.list();
+                setCategories(cats);
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        };
+        loadCategories();
+    }, []);
+
+    const handleCategoryChange = (value) => {
+        setSelectedCategory(value);
+        setPage(0);
+        fetchArticles(0);
+    };
 
     const handleDelete = async (articleId) => {
         try {
@@ -88,6 +143,23 @@ function AdminManageContent() {
                 </Link>
             </div>
 
+            {/* Category Filter */}
+            <div className="mb-4">
+                <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+                    <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder={language === 'kn' ? 'ವರ್ಗ ಆಯ್ಕೆಮಾಡಿ' : 'Select Category'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">{language === 'kn' ? 'ಎಲ್ಲಾ ವರ್ಗಗಳು' : 'All Categories'}</SelectItem>
+                        {categories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.slug}>
+                                {language === 'kn' ? (cat.name_kn || cat.name_en) : cat.name_en}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle>{language === 'kn' ? 'ಇತ್ತೀಚಿನ ಲೇಖನಗಳು' : 'Recent Articles'}</CardTitle>
@@ -118,7 +190,7 @@ function AdminManageContent() {
                                                     : (article.title_en || article.title_kn || '')}
                                             </span>
                                         </TableCell>
-                                        <TableCell><Badge variant="outline">{article.category ? String(article.category).replace(/\b\w/g, c => c.toUpperCase()) : '-'}</Badge></TableCell>
+                                        <TableCell><Badge variant="outline">{article.categoryName || '-'}</Badge></TableCell>
                                         <TableCell>{article.reporter}</TableCell>
                                         <TableCell>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'dd MMM yyyy') : '-'; })()}</TableCell>
                                         <TableCell className="text-right">
@@ -146,6 +218,27 @@ function AdminManageContent() {
                             )}
                         </TableBody>
                     </Table>
+                    
+                    {/* Pagination */}
+                    <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => fetchArticles(page - 1)}
+                            disabled={page === 0 || isLoading}
+                        >
+                            {language === 'kn' ? 'ಹಿಂದಿನದು' : 'Previous'}
+                        </Button>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {language === 'kn' ? `ಪುಟ ${page + 1}` : `Page ${page + 1}`}
+                        </span>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => fetchArticles(page + 1)}
+                            disabled={!hasMore || isLoading}
+                        >
+                            {language === 'kn' ? 'ಮುಂದಿನದು' : 'Next'}
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>

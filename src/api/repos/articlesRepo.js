@@ -12,8 +12,15 @@ export const articlesRepo = {
   },
 
   async listByCategory(slug, { limit = 20, offset = 0 } = {}) {
-    // For now, return all articles (category filtering will be added to API later)
-    return this.list({ limit, offset })
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://api.edensnews.com/api';
+      const response = await fetch(`${apiUrl}/articles?limit=${limit}&offset=${offset}&status=published&category=${slug}`);
+      const data = await response.json();
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching articles by category:', error);
+      return [];
+    }
   },
 
   async search(q, { limit = 20, offset = 0 } = {}) {
