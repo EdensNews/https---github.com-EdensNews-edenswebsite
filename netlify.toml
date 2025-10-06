@@ -15,6 +15,13 @@
   to = "/index.html"
   status = 200
 
+# Enable prerendering for social media crawlers
+[build.processing]
+  skip_processing = false
+
+[build.processing.html]
+  pretty_urls = true
+
 [functions]
   directory = "netlify/functions"
 

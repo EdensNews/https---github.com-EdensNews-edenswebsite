@@ -22,7 +22,7 @@ export default function ArticleCard({ article }) {
         if (language === 'ml') return article.title_ml || article.title_en || article.title_kn || article.title_ta || article.title_te || article.title_hi || '';
         return article.title_en || article.title_kn || '';
     })();
-    const categoryText = language === 'kn' ? article.category : article.category;
+    const categoryText = language === 'kn' ? (article.category_kn || article.category) : article.category;
 
     // Check if breaking news is still valid (within 1 hour)
     const isBreaking = article.is_breaking && 
@@ -99,8 +99,8 @@ Shared from Edens News`;
                     
                     // Check if blob is valid
                     if (blob.size > 0) {
-                        // Generate thumbnail using HTML5 Canvas
-                        const thumbnailBlob = await generateThumbnail(blob, 400, 400);
+                        // Generate smaller thumbnail for better compatibility (300x300, compressed)
+                        const thumbnailBlob = await generateThumbnail(blob, 300, 300);
                         
                         if (thumbnailBlob) {
                             const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
@@ -171,27 +171,33 @@ Shared from Edens News`;
                     }
                     
                     // Set canvas dimensions
-                    canvas.width = width;
                     canvas.height = height;
                     
                     // Draw image on canvas
                     ctx.drawImage(img, 0, 0, width, height);
                     
-                    // Convert to blob
-                    canvas.toBlob((result) => {
-                        if (result) {
-                            resolve(result);
+                    // Convert canvas to blob with lower quality for smaller file size
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // Check if blob is under 5MB (WhatsApp/Facebook limit)
+                            if (blob.size > 5 * 1024 * 1024) {
+                                // Try again with lower quality
+                                canvas.toBlob((smallerBlob) => {
+                                    resolve(smallerBlob || blob);
+                                }, 'image/jpeg', 0.4); // 40% quality for very large images
+                            } else {
+                                resolve(blob);
+                            }
                         } else {
                             reject(new Error('Failed to create thumbnail blob'));
                         }
-                    }, 'image/jpeg', 0.8);
+                    }, 'image/jpeg', 0.6); // 60% quality JPEG (reduced from 70%)
                 } catch (error) {
                     reject(error);
                 }
             };
             
             img.onerror = (error) => {
-                console.warn('Image load error:', error);
                 reject(new Error('Failed to load image for thumbnail generation'));
             };
             

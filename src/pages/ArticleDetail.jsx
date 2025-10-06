@@ -329,8 +329,8 @@ Shared from Edens News`;
     const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
     const shareImage = article.image_url && article.image_url.startsWith('http') ? article.image_url : `${siteUrl}${article.image_url || ''}`;
-    // Use Netlify function URL for OG previews when sharing - this provides better caching and ensures images are accessible
-    const ogShareUrl = shareImage ? `${siteUrl}/.netlify/functions/share-og?id=${article.id}` : null;
+    // Use direct image URL for better Facebook/WhatsApp compatibility
+    const ogShareUrl = shareImage || null;
     const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     

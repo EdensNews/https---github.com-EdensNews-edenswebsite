@@ -259,7 +259,7 @@ async function runRSSAutomation() {
   try {
     // Get all active RSS feeds (using source_name as that's what exists in the actual DB)
     const feedsResult = await pool.query(
-      'SELECT id, source_name, url, category_id FROM rss_feeds WHERE is_active = true'
+      'SELECT id, source_name, url FROM rss_feeds WHERE is_active = true'
     );
     
     const feeds = feedsResult.rows;
@@ -280,7 +280,7 @@ async function runRSSAutomation() {
         let published = false;
         for (const article of articles) {
           totalProcessed++;
-          const articleId = await processArticle(feed.id, article, feed.category_id);
+          const articleId = await processArticle(feed.id, article, null); // No category for now
           if (articleId) {
             totalPublished++;
             published = true;
