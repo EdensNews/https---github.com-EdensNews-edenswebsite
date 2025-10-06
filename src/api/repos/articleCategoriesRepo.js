@@ -20,11 +20,19 @@ export const articleCategoriesRepo = {
 
   async link(article_id, category_id) {
     try {
-      const { error } = await supabase
-        .from(TABLE)
-        .upsert({ article_id, category_id }, { onConflict: 'article_id,category_id' })
-      if (error) throw error
-      return true
+      // Use API endpoint instead of Supabase
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://api.edensnews.com/api';
+      const response = await fetch(`${apiUrl}/article-categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ article_id, category_id })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to link category');
+      }
+      
+      return true;
     } catch (error) {
       console.error('[articleCategoriesRepo] link error:', error)
       throw error

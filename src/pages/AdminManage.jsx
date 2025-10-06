@@ -113,7 +113,12 @@ function AdminManageContent() {
         try {
             await articlesRepo.delete(articleId);
             toast({ title: "Article deleted successfully" });
-            fetchArticles(); // Refresh the list
+            
+            // Remove article from local state immediately for instant UI update
+            setArticles(prevArticles => prevArticles.filter(a => a.id !== articleId));
+            
+            // Then refresh the list from server
+            fetchArticles(page);
         } catch (error) {
             console.error("Failed to delete article:", error);
             toast({ title: "Error deleting article", variant: "destructive" });

@@ -103,7 +103,11 @@ function fetchRSSFeed(url) {
 async function translateContent(text, targetLang) {
   const langNames = {
     kn: 'Kannada',
-    en: 'English'
+    en: 'English',
+    ta: 'Tamil',
+    te: 'Telugu',
+    hi: 'Hindi',
+    ml: 'Malayalam'
   };
   
   const prompt = `Translate the following text to ${langNames[targetLang]}. Maintain the same tone and style. Return only the translated text without any additional commentary:\n\n${text}`;
@@ -169,33 +173,57 @@ async function processArticle(feedId, article, categoryId) {
     // Detect source language (assume English if not Kannada)
     const isKannada = /[\u0C80-\u0CFF]/.test(article.title);
     
-    // Translate title and content
-    let titleKn, titleEn, contentKn, contentEn;
+    // Translate title and content to all languages
+    let titleKn, titleEn, titleTa, titleTe, titleHi, titleMl;
+    let contentKn, contentEn, contentTa, contentTe, contentHi, contentMl;
     
     if (isKannada) {
+      // Source is Kannada
       titleKn = article.title;
-      titleEn = await translateContent(article.title, 'en');
       contentKn = article.description;
+      
+      // Translate to other languages
+      titleEn = await translateContent(article.title, 'en');
+      titleTa = await translateContent(article.title, 'ta');
+      titleTe = await translateContent(article.title, 'te');
+      titleHi = await translateContent(article.title, 'hi');
+      titleMl = await translateContent(article.title, 'ml');
+      
       contentEn = await translateContent(article.description, 'en');
+      contentTa = await translateContent(article.description, 'ta');
+      contentTe = await translateContent(article.description, 'te');
+      contentHi = await translateContent(article.description, 'hi');
+      contentMl = await translateContent(article.description, 'ml');
     } else {
+      // Source is English
       titleEn = article.title;
-      titleKn = await translateContent(article.title, 'kn');
       contentEn = article.description;
+      
+      // Translate to other languages
+      titleKn = await translateContent(article.title, 'kn');
+      titleTa = await translateContent(article.title, 'ta');
+      titleTe = await translateContent(article.title, 'te');
+      titleHi = await translateContent(article.title, 'hi');
+      titleMl = await translateContent(article.title, 'ml');
+      
       contentKn = await translateContent(article.description, 'kn');
+      contentTa = await translateContent(article.description, 'ta');
+      contentTe = await translateContent(article.description, 'te');
+      contentHi = await translateContent(article.description, 'hi');
+      contentMl = await translateContent(article.description, 'ml');
     }
     
-    // Create article in database
+    // Create article in database with all languages
     const articleResult = await pool.query(
       `INSERT INTO articles (
-        title_en, title_kn, content_en, content_kn,
+        title_en, title_kn, title_ta, title_te, title_hi, title_ml,
+        content_en, content_kn, content_ta, content_te, content_hi, content_ml,
         image_url, reporter, status, published_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
       RETURNING id`,
       [
-        titleEn,
-        titleKn,
-        contentEn,
-        contentKn,
+        titleEn, titleKn, titleTa, titleTe, titleHi, titleMl,
+        contentEn, contentKn, contentTa, contentTe, contentHi, contentMl,
         article.image_url || '',
         'RSS Feed',
         'published'
@@ -248,16 +276,21 @@ async function runRSSAutomation() {
         const articles = await fetchRSSFeed(feed.url);
         console.log(`Fetched ${articles.length} articles from RSS`);
         
-        // Process each article
+        // Process only the FIRST unprocessed article (1 per feed per hour)
+        let published = false;
         for (const article of articles) {
           totalProcessed++;
           const articleId = await processArticle(feed.id, article, feed.category_id);
           if (articleId) {
             totalPublished++;
+            published = true;
+            console.log(`✓ Published 1 article from ${feed.source_name}`);
+            break; // Stop after publishing 1 article
           }
-          
-          // Add delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+        if (!published) {
+          console.log(`No new articles to publish from ${feed.source_name}`);
         }
         
         // Update feed's last_fetched_at

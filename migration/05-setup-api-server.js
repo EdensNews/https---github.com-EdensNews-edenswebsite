@@ -26,7 +26,8 @@ const pool = new Pool({
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100mb' })); // Increase payload limit for large articles with multiple images
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // Simple in-memory cache
 const cache = new Map();
@@ -188,6 +189,13 @@ app.put('/api/articles/:id', async (req, res) => {
 app.delete('/api/articles/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Delete related records first (if they exist)
+    await pool.query('DELETE FROM article_categories WHERE article_id = $1', [id]);
+    await pool.query('DELETE FROM bookmarks WHERE article_id = $1', [id]);
+    await pool.query('DELETE FROM article_views WHERE article_id = $1', [id]);
+    
+    // Delete the article
     const result = await pool.query('DELETE FROM articles WHERE id = $1 RETURNING id', [id]);
     
     if (result.rows.length === 0) {
@@ -252,6 +260,20 @@ app.get('/api/article-categories/:articleId', async (req, res) => {
       [articleId]
     );
     res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Link article to category
+app.post('/api/article-categories', async (req, res) => {
+  try {
+    const { article_id, category_id } = req.body;
+    const result = await pool.query(
+      'INSERT INTO article_categories (article_id, category_id) VALUES ($1, $2) ON CONFLICT (article_id, category_id) DO NOTHING RETURNING *',
+      [article_id, category_id]
+    );
+    res.status(201).json(result.rows[0] || { article_id, category_id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -330,6 +352,161 @@ app.get('/api/settings/stream', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM stream_settings ORDER BY created_at DESC LIMIT 1');
     res.json(result.rows[0] || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== RSS FEEDS API ====================
+
+app.get('/api/rss-feeds', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM rss_feeds ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/rss-feeds', async (req, res) => {
+  try {
+    const { source_name, url, category_id, is_active } = req.body;
+    const result = await pool.query(
+      'INSERT INTO rss_feeds (source_name, url, category_id, is_active) VALUES ($1, $2, $3, $4) RETURNING *',
+      [source_name, url, category_id || null, is_active !== false]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/rss-feeds/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { source_name, url, category_id, is_active } = req.body;
+    const result = await pool.query(
+      'UPDATE rss_feeds SET source_name = $1, url = $2, category_id = $3, is_active = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
+      [source_name, url, category_id, is_active, id]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/rss-feeds/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM rss_feeds WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== ANALYTICS VIEW COUNTS ====================
+
+app.post('/api/analytics/view-counts', async (req, res) => {
+  try {
+    const { article_ids } = req.body;
+    if (!article_ids || article_ids.length === 0) {
+      return res.json({});
+    }
+    
+    const result = await pool.query(
+      'SELECT article_id, COUNT(*) as count FROM article_views WHERE article_id = ANY($1) GROUP BY article_id',
+      [article_ids]
+    );
+    
+    const counts = {};
+    result.rows.forEach(row => {
+      counts[row.article_id] = parseInt(row.count);
+    });
+    
+    res.json(counts);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== REACTIONS API ====================
+
+app.get('/api/reactions/:articleId', async (req, res) => {
+  try {
+    const { articleId } = req.params;
+    const result = await pool.query(
+      'SELECT reaction_type, COUNT(*) as count FROM article_reactions WHERE article_id = $1 GROUP BY reaction_type',
+      [articleId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/reactions', async (req, res) => {
+  try {
+    const { article_id, user_id, reaction_type } = req.body;
+    const result = await pool.query(
+      'INSERT INTO article_reactions (article_id, user_id, reaction_type) VALUES ($1, $2, $3) ON CONFLICT (article_id, user_id) DO UPDATE SET reaction_type = $3 RETURNING *',
+      [article_id, user_id, reaction_type]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== SCHEDULE API ====================
+
+app.get('/api/schedule', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM broadcast_schedule ORDER BY day_of_week, start_time');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/schedule', async (req, res) => {
+  try {
+    const schedule = req.body;
+    const columns = Object.keys(schedule);
+    const values = Object.values(schedule);
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+    
+    const result = await pool.query(
+      `INSERT INTO broadcast_schedule (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`,
+      values
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/schedule/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    const setClause = Object.keys(updates).map((key, i) => `${key} = $${i + 2}`).join(', ');
+    
+    const result = await pool.query(
+      `UPDATE broadcast_schedule SET ${setClause} WHERE id = $1 RETURNING *`,
+      [id, ...Object.values(updates)]
+    );
+    res.json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/schedule/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM broadcast_schedule WHERE id = $1', [id]);
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
