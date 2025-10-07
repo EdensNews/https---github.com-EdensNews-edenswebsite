@@ -10,28 +10,16 @@ export const handler = async (event) => {
       return htmlResponse(400, '<h1>Missing id</h1>');
     }
 
-    const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return htmlResponse(500, '<h1>Server not configured</h1>');
-    }
-
-    // Fetch the article via PostgREST
-    const apiUrl = `${SUPABASE_URL}/rest/v1/articles?id=eq.${encodeURIComponent(id)}&select=*`;
-    const res = await fetch(apiUrl, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
+    // Fetch the article from PostgreSQL API
+    const apiUrl = `https://api.edensnews.com/api/articles/${encodeURIComponent(id)}`;
+    const res = await fetch(apiUrl);
 
     if (!res.ok) {
       return htmlResponse(404, '<h1>Article not found</h1>');
     }
 
-    const rows = await res.json();
-    const article = Array.isArray(rows) && rows.length ? rows[0] : null;
-    if (!article) {
+    const article = await res.json();
+    if (!article || !article.id) {
       return htmlResponse(404, '<h1>Article not found</h1>');
     }
 
@@ -40,7 +28,7 @@ export const handler = async (event) => {
     const description = stripHtml(article.content_en || article.content_kn || '').slice(0, 160) || 'Edens News';
 
     // Ensure absolute image URL - prioritize direct image access for better Facebook compatibility
-    const siteOrigin = process.env.PUBLIC_SITE_ORIGIN || 'https://edensnews.netlify.app';
+    const siteOrigin = 'https://edensnews.com';
     let imageAbsolute = null;
 
     if (article.image_url) {
