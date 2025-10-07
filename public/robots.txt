@@ -1,0 +1,18 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Specifically allow Facebook crawler
+User-agent: facebookexternalhit
+Allow: /
+
+# Allow WhatsApp crawler
+User-agent: WhatsApp
+Allow: /
+
+# Allow Twitter crawler
+User-agent: Twitterbot
+Allow: /
+
+# Sitemap
+Sitemap: https://edensnews.com/sitemap.xml

@@ -78,7 +78,9 @@ export default async (request, context) => {
     return new Response(modifiedHtml, {
       headers: {
         'content-type': 'text/html',
+        'cache-control': 'public, max-age=0, must-revalidate',
       },
+      status: 200,
     });
   } catch (error) {
     console.error('Error in OG tags edge function:', error);
