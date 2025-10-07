@@ -29,6 +29,9 @@ export default async (request, context) => {
     
     const article = await response.json();
     
+    // Log for debugging
+    console.log('Article data:', { id: articleId, image_url: article.image_url, title: article.title_en || article.title_kn });
+    
     // Get the original HTML
     const originalResponse = await context.next();
     const html = await originalResponse.text();
@@ -36,7 +39,18 @@ export default async (request, context) => {
     // Prepare meta tags
     const title = article.title_en || article.title_kn || 'Edens News';
     const description = (article.content_en || article.content_kn || '').replace(/<[^>]+>/g, '').slice(0, 160);
-    const imageUrl = article.image_url || 'https://edensnews.com/default-article-image.jpg';
+    
+    // Ensure image URL is absolute and valid
+    let imageUrl = article.image_url;
+    if (!imageUrl || imageUrl === '') {
+      imageUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png';
+    } else if (!imageUrl.startsWith('http')) {
+      // If relative URL, make it absolute
+      imageUrl = `https://edensnews.com${imageUrl}`;
+    }
+    
+    console.log('Using image URL:', imageUrl);
+    
     const articleUrl = `https://edensnews.com/articledetail?id=${articleId}`;
     
     // Inject meta tags into HTML
