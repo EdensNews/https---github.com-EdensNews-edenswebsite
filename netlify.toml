@@ -25,6 +25,10 @@
 [functions]
   directory = "netlify/functions"
 
+[[edge_functions]]
+  function = "og-tags"
+  path = "/articledetail"
+
 [[headers]]
   for = "/.netlify/functions/*"
   [headers.values]

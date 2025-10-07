@@ -44,12 +44,8 @@ export default function ArticleCard({ article }) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Determine the best URL to use for sharing
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const regularUrl = `${window.location.origin}/articledetail?id=${article.id}`;
-        
-        // For localhost, use regular URL. For production, use OG URL for better previews
-        const shareUrl = isLocalhost ? regularUrl : `${window.location.origin}/.netlify/functions/share-og?id=${article.id}`;
+        // Use the article URL for sharing
+        const shareUrl = `${window.location.origin}/articledetail?id=${article.id}`;
         
         // Create a more comprehensive share text that works across platforms
         const shareText = `${title}
