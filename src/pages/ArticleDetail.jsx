@@ -273,8 +273,8 @@ Shared from Edens News`;
         }
     };
     const fbHref = (() => {
-        // Use Netlify function URL for Facebook sharing to ensure proper OG image meta tags
-        const url = encodeURIComponent(`${window.location.origin}/.netlify/functions/share-og?id=${articleId}`);
+        // Use article URL for Facebook sharing - Edge Function will inject OG tags
+        const url = encodeURIComponent(`${window.location.origin}/articledetail?id=${articleId}`);
         return `https://www.facebook.com/sharer/sharer.php?u=${url}`;
     })();
     const twHref = (() => {
@@ -329,9 +329,10 @@ Shared from Edens News`;
     const canonicalUrl = `${siteUrl}/articledetail?id=${articleId}`;
     const shareDesc = (content || '').replace(/<[^>]+>/g, '').slice(0, 160) || 'Edens News';
     const shareImage = article.image_url && article.image_url.startsWith('http') ? article.image_url : `${siteUrl}${article.image_url || ''}`;
-    // Use direct image URL for better Facebook/WhatsApp compatibility
+    // Use direct image URL for OG meta tags
     const ogShareUrl = shareImage || null;
-    const waText = encodeURIComponent(`${title}\n\n${ogShareUrl}`);
+    // Use article URL for WhatsApp sharing (not image URL)
+    const waText = encodeURIComponent(`${title}\n\n${canonicalUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
     
     // (removed duplicate translation effect to maintain stable hook order)
