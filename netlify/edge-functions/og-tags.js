@@ -1,14 +1,20 @@
 export default async (request, context) => {
   const url = new URL(request.url);
   
-  // Only handle article detail pages
-  if (!url.pathname.includes('/articledetail')) {
+  // Get article ID from query params
+  const articleId = url.searchParams.get('id');
+  
+  // Only process if we have an article ID
+  if (!articleId) {
     return context.next();
   }
   
-  // Get article ID from query params
-  const articleId = url.searchParams.get('id');
-  if (!articleId) {
+  // Check if this is a bot/crawler (Facebook, WhatsApp, Twitter, etc.)
+  const userAgent = request.headers.get('user-agent') || '';
+  const isCrawler = /bot|crawler|spider|facebook|whatsapp|twitter|telegram|slack/i.test(userAgent);
+  
+  // Only inject meta tags for crawlers to avoid affecting regular users
+  if (!isCrawler) {
     return context.next();
   }
   
@@ -67,5 +73,5 @@ export default async (request, context) => {
 };
 
 export const config = {
-  path: '/articledetail',
+  path: '/*',
 };

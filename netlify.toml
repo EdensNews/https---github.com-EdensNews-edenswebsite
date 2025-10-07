@@ -27,7 +27,7 @@
 
 [[edge_functions]]
   function = "og-tags"
-  path = "/articledetail"
+  path = "/*"
 
 [[headers]]
   for = "/.netlify/functions/*"
