@@ -32,9 +32,10 @@ export default async (request, context) => {
     // Log for debugging
     console.log('Article data:', { id: articleId, image_url: article.image_url, title: article.title_en || article.title_kn });
     
-    // Get the original HTML
-    const originalResponse = await context.next();
-    const html = await originalResponse.text();
+    // Get the original HTML from the built index.html directly
+    // Don't use context.next() as it may cause redirect issues
+    const indexResponse = await fetch(`${url.origin}/index.html`);
+    const html = await indexResponse.text();
     
     // Prepare meta tags
     const title = article.title_en || article.title_kn || 'Edens News';
@@ -53,8 +54,24 @@ export default async (request, context) => {
     
     const articleUrl = `https://edensnews.com/articledetail?id=${articleId}`;
     
-    // Inject meta tags into HTML
+    // Remove existing OG tags from index.html to avoid conflicts
+    let modifiedHtml = html
+      .replace(/<meta property="og:type"[^>]*>/gi, '')
+      .replace(/<meta property="og:url"[^>]*>/gi, '')
+      .replace(/<meta property="og:title"[^>]*>/gi, '')
+      .replace(/<meta property="og:description"[^>]*>/gi, '')
+      .replace(/<meta property="og:image"[^>]*>/gi, '')
+      .replace(/<meta property="og:site_name"[^>]*>/gi, '')
+      .replace(/<meta property="og:locale"[^>]*>/gi, '')
+      .replace(/<meta name="twitter:card"[^>]*>/gi, '')
+      .replace(/<meta name="twitter:title"[^>]*>/gi, '')
+      .replace(/<meta name="twitter:description"[^>]*>/gi, '')
+      .replace(/<meta name="twitter:image"[^>]*>/gi, '')
+      .replace(/<title>[^<]*<\/title>/gi, '');
+    
+    // Inject article-specific meta tags
     const metaTags = `
+    <title>${title} | Edens News</title>
     <meta property="og:type" content="article" />
     <meta property="og:url" content="${articleUrl}" />
     <meta property="og:title" content="${title}" />
@@ -65,15 +82,15 @@ export default async (request, context) => {
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:site_name" content="Edens News" />
+    <meta property="og:locale" content="en_IN" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${imageUrl}" />
-    <title>${title} | Edens News</title>
     `;
     
-    // Replace default meta tags with article-specific ones
-    const modifiedHtml = html.replace('</head>', `${metaTags}</head>`);
+    // Insert new meta tags before </head>
+    modifiedHtml = modifiedHtml.replace('</head>', `${metaTags}</head>`);
     
     return new Response(modifiedHtml, {
       headers: {
