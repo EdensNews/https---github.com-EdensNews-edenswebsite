@@ -11,12 +11,12 @@ export default async (request, context) => {
   
   // Check if this is a bot/crawler (Facebook, WhatsApp, Twitter, etc.)
   const userAgent = request.headers.get('user-agent') || '';
-  const isCrawler = /bot|crawler|spider|facebook|whatsapp|twitter|telegram|slack/i.test(userAgent);
+  const isCrawler = /bot|crawler|spider|facebook|facebookexternalhit|whatsapp|twitter|telegram|slack|linkedinbot|pinterest/i.test(userAgent);
   
-  // Only inject meta tags for crawlers to avoid affecting regular users
-  if (!isCrawler) {
-    return context.next();
-  }
+  console.log('User-Agent:', userAgent, 'Is Crawler:', isCrawler);
+  
+  // Always inject meta tags for article pages (removed crawler check to fix Facebook issue)
+  // The Edge Function will run for all requests with article IDs
   
   try {
     // Fetch article data from API
