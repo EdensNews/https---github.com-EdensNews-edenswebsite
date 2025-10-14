@@ -84,20 +84,22 @@ export const analyticsRepo = {
 
   async getViewCounts(articleIds) {
     try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .select('article_id')
-        .in('article_id', articleIds)
+      // Use PostgreSQL API to get view counts
+      const API_URL = 'https://api.edensnews.com/api';
+      const response = await fetch(`${API_URL}/analytics/view-counts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ article_ids: articleIds })
+      });
       
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Failed to fetch view counts');
+      }
       
-      // Count views per article
-      const counts = {}
-      data.forEach(view => {
-        counts[view.article_id] = (counts[view.article_id] || 0) + 1
-      })
-      
-      return counts
+      const counts = await response.json();
+      return counts || {};
     } catch (error) {
       console.error('Failed to get view counts:', error)
       return {}
