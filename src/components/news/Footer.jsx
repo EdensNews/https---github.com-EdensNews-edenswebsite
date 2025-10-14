@@ -221,6 +221,20 @@ export default function Footer() {
                         >
                             {language === 'kn' ? 'ಗೋಪ್ಯತಾ ನೀತಿ' : 'Privacy Policy'}
                         </Link>
+                        <span className="hidden sm:inline text-gray-600">|</span>
+                        <Link 
+                            to="/about" 
+                            className={`text-gray-400 hover:text-white transition-colors text-sm ${language === 'kn' ? 'font-kannada' : ''}`}
+                        >
+                            {language === 'kn' ? 'ನಮ್ಮ ಬಗ್ಗೆ' : 'About Us'}
+                        </Link>
+                        <span className="hidden sm:inline text-gray-600">|</span>
+                        <Link 
+                            to="/contact" 
+                            className={`text-gray-400 hover:text-white transition-colors text-sm ${language === 'kn' ? 'font-kannada' : ''}`}
+                        >
+                            {language === 'kn' ? 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ' : 'Contact Us'}
+                        </Link>
                     </div>
                     <p className={`text-center text-gray-400 text-sm ${language === 'kn' ? 'font-kannada' : ''}`}>
                         {language === 'kn' ? settings.copyright_text_kn : settings.copyright_text_en}

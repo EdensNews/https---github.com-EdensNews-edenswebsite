@@ -76,7 +76,8 @@ export default function Header() {
         if (Array.isArray(rows) && rows.length) {
           setCategories(rows.map(r => ({ 
             slug: r.slug, 
-            name: language === 'kn' ? (r.name_kn || r.name_en || r.slug) : (r.name_en || r.name_kn || r.slug)
+            name: r.name_en || r.slug,
+            kn_name: r.name_kn || r.name_en || r.slug
           })));
         } else {
           setCategories(fallbackCategoryLinks);
@@ -154,7 +155,7 @@ export default function Header() {
                             <Link
                               to={createPageUrl(`Home?category=${catLink.slug}`)}
                               className={`w-full cursor-pointer hover:bg-red-900/20 transition-colors ${language === 'kn' ? 'font-kannada' : ''}`}>
-                              {catLink.name}
+                              {language === 'kn' ? (catLink.kn_name || catLink.name) : catLink.name}
                             </Link>
                           </DropdownMenuItem>
                         )}
@@ -366,7 +367,7 @@ export default function Header() {
                             to={createPageUrl(`Home?category=${catLink.slug}`)}
                             onClick={closeMobileMenu}
                             className={`block text-sm p-2 rounded hover:bg-gray-800 ${language === 'kn' ? 'font-kannada' : ''}`}>
-                            {catLink.name}
+                            {language === 'kn' ? (catLink.kn_name || catLink.name) : catLink.name}
                           </Link>
                         ))}
                       </div>

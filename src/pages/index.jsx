@@ -36,6 +36,10 @@ import TermsAndConditions from "./TermsAndConditions";
 
 import PrivacyPolicy from "./PrivacyPolicy";
 
+import AboutUs from "./AboutUs";
+
+import ContactUs from "./ContactUs";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -75,6 +79,10 @@ const PAGES = {
     TermsAndConditions: TermsAndConditions,
     
     PrivacyPolicy: PrivacyPolicy,
+    
+    AboutUs: AboutUs,
+    
+    ContactUs: ContactUs,
     
 }
 
@@ -139,6 +147,10 @@ function PagesContent() {
                 <Route path="/terms" element={<TermsAndConditions />} />
                 
                 <Route path="/privacy" element={<PrivacyPolicy />} />
+                
+                <Route path="/about" element={<AboutUs />} />
+                
+                <Route path="/contact" element={<ContactUs />} />
                 
             </Routes>
         </Layout>

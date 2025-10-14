@@ -11,10 +11,11 @@ import { useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, User as UserIcon, Bookmark, Share2 } from 'lucide-react';
+import { Clock, User as UserIcon, Bookmark, Share2, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import ArticleReactions from '@/components/ArticleReactions';
 import TextToSpeech from '@/components/TextToSpeech';
+import CompactArticleCard from '@/components/news/CompactArticleCard';
 // toast removed per request
 
 function useQuery() {
@@ -27,6 +28,7 @@ export default function ArticleDetail() {
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [hasTrackedView, setHasTrackedView] = useState(false);
     const [readProgress, setReadProgress] = useState(0);
+    const [relatedArticles, setRelatedArticles] = useState([]);
     const { user, isLoading: userLoading } = useLanguage();
 
     const query = useQuery();
@@ -53,6 +55,40 @@ export default function ArticleDetail() {
         };
         fetchArticle();
     }, [articleId]);
+
+    // Fetch related articles from the same category
+    useEffect(() => {
+        const fetchRelatedArticles = async () => {
+            if (!article) return;
+            
+            try {
+                let articles = [];
+                
+                // Try to get articles from same category first
+                if (article.category) {
+                    articles = await articlesRepo.listByCategory(article.category, { 
+                        limit: 10 
+                    });
+                    console.log('Related articles by category:', articles.length);
+                }
+                
+                // If no category articles, get latest articles as fallback
+                if (articles.length === 0) {
+                    articles = await articlesRepo.list({ limit: 10 });
+                    console.log('Fallback to latest articles:', articles.length);
+                }
+                
+                // Filter out current article and limit to 8
+                const filtered = articles.filter(a => a.id !== article.id).slice(0, 8);
+                setRelatedArticles(filtered);
+                console.log('Final related articles to display:', filtered.length);
+            } catch (error) {
+                console.error("Failed to fetch related articles:", error);
+            }
+        };
+
+        fetchRelatedArticles();
+    }, [article]);
 
     // Track view when article is loaded and user has spent some time on the page
     useEffect(() => {
@@ -387,6 +423,10 @@ Shared from Edens News`;
                 <meta property="og:description" content={shareDesc} />
                 <meta property="og:site_name" content="Edens News" />
                 <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
+                <meta property="article:published_time" content={article.published_at || article.created_at} />
+                <meta property="article:modified_time" content={article.updated_at || article.created_at} />
+                <meta property="article:author" content={article.reporter || 'Edens News'} />
+                <meta property="article:section" content={article.category || 'News'} />
 
                 {/* Facebook App ID */}
                 {import.meta.env.VITE_FACEBOOK_APP_ID && (
@@ -418,9 +458,57 @@ Shared from Edens News`;
 
                 {/* Additional meta tags for better sharing */}
                 <meta name="author" content={article.reporter || 'Edens News'} />
-                <meta name="keywords" content={`news, ${article.category}, ${language === 'kn' ? 'ಕನ್ನಡ' : 'English'}, Edens News`} />
+                <meta name="keywords" content={`news, ${article.category}, ${language === 'kn' ? 'ಕನ್ನಡ' : 'English'}, Edens News, ${article.reporter || ''}`} />
+                
+                {/* JSON-LD Structured Data for SEO */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "NewsArticle",
+                        "headline": title,
+                        "description": shareDesc,
+                        "image": ogShareUrl,
+                        "datePublished": article.published_at || article.created_at,
+                        "dateModified": article.updated_at || article.created_at,
+                        "author": {
+                            "@type": "Person",
+                            "name": article.reporter || "Edens News"
+                        },
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "Edens News",
+                            "logo": {
+                                "@type": "ImageObject",
+                                "url": "https://edensnews.com/logo.png"
+                            }
+                        },
+                        "mainEntityOfPage": {
+                            "@type": "WebPage",
+                            "@id": canonicalUrl
+                        },
+                        "articleSection": article.category || "News",
+                        "inLanguage": language === 'kn' ? 'kn' : 'en'
+                    })}
+                </script>
             </Helmet>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-6 lg:pt-8 article-content-wrapper">
+                {/* Breadcrumbs */}
+                <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <a href="/" className="hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                        {language === 'kn' ? 'ಮುಖಪುಟ' : 'Home'}
+                    </a>
+                    <ChevronRight className="w-4 h-4" />
+                    {article.category && (
+                        <>
+                            <a href={`/category/${article.category}`} className="hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                                {article.category}
+                            </a>
+                            <ChevronRight className="w-4 h-4" />
+                        </>
+                    )}
+                    <span className="text-gray-900 dark:text-gray-100 truncate">{title.slice(0, 50)}...</span>
+                </nav>
+                
                 <article className="relative z-10 bg-white dark:bg-gray-800">
                     <header className="mb-8 sm:mb-8 article-header-mobile">
                         {article.category && <Badge className="mb-4 sm:mb-4 text-xs sm:text-sm">{String(article.category).replace(/\b\w/g, c => c.toUpperCase())}</Badge>}
@@ -468,6 +556,20 @@ Shared from Edens News`;
 
                     {/* Article Reactions */}
                     <ArticleReactions articleId={article.id} />
+
+                    {/* Related Articles Section */}
+                    {relatedArticles.length > 0 && (
+                        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                            <h2 className={`text-2xl sm:text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100 ${language === 'kn' ? 'font-kannada' : ''}`}>
+                                {language === 'kn' ? 'ಸಂಬಂಧಿತ ಸುದ್ದಿಗಳು' : 'Related Stories'}
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {relatedArticles.map(relatedArticle => (
+                                    <CompactArticleCard key={relatedArticle.id} article={relatedArticle} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                 </article>
             </div>

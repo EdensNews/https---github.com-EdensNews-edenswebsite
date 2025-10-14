@@ -15,4 +15,4 @@ User-agent: Twitterbot
 Allow: /
 
 # Sitemap
-Sitemap: https://edensnews.com/sitemap.xml
+Sitemap: https://edensnews.com/.netlify/functions/sitemap

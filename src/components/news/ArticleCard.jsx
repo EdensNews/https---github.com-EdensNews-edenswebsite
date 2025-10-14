@@ -12,6 +12,9 @@ export default function ArticleCard({ article }) {
     const { toast } = useToast();
     const [viewCount] = useState(article.views || 0);
     
+    // Debug: Log view count
+    console.log('Article:', article.id, 'Views:', article.views, 'ViewCount:', viewCount);
+    
     const title = (() => {
         // Prefer exact language match, then sensible fallbacks
         if (language === 'kn') return article.title_kn || article.title_en || article.title_ta || article.title_te || article.title_hi || article.title_ml || '';
@@ -22,7 +25,77 @@ export default function ArticleCard({ article }) {
         if (language === 'ml') return article.title_ml || article.title_en || article.title_kn || article.title_ta || article.title_te || article.title_hi || '';
         return article.title_en || article.title_kn || '';
     })();
-    const categoryText = language === 'kn' ? (article.category_kn || article.category) : article.category;
+    const categoryText = (() => {
+        if (!article.category) return '';
+        const cat = String(article.category);
+        
+        if (language === 'kn') {
+            const knMap = {
+                'Politics': 'ರಾಜಕೀಯ', 'politics': 'ರಾಜಕೀಯ',
+                'Sports': 'ಕ್ರೀಡೆ', 'sports': 'ಕ್ರೀಡೆ',
+                'Business': 'ವ್ಯಾಪಾರ', 'business': 'ವ್ಯಾಪಾರ',
+                'Entertainment': 'ಮನರಂಜನೆ', 'entertainment': 'ಮನರಂಜನೆ',
+                'Technology': 'ತಂತ್ರಜ್ಞಾನ', 'technology': 'ತಂತ್ರಜ್ಞಾನ',
+                'Karnataka': 'ಕರ್ನಾಟಕ', 'karnataka': 'ಕರ್ನಾಟಕ',
+                'World': 'ವಿಶ್ವ', 'world': 'ವಿಶ್ವ',
+                'National': 'ರಾಷ್ಟ್ರೀಯ', 'national': 'ರಾಷ್ಟ್ರೀಯ'
+            };
+            return knMap[cat] || cat;
+        }
+        if (language === 'ta') {
+            const taMap = {
+                'Politics': 'அரசியல்', 'politics': 'அரசியல்',
+                'Sports': 'விளையாட்டு', 'sports': 'விளையாட்டு',
+                'Business': 'வணிகம்', 'business': 'வணிகம்',
+                'Entertainment': 'பொழுதுபோக்கு', 'entertainment': 'பொழுதுபோக்கு',
+                'Technology': 'தொழில்நுட்பம்', 'technology': 'தொழில்நுட்பம்',
+                'Karnataka': 'கர்நாடகா', 'karnataka': 'கர்நாடகா',
+                'World': 'உலகம்', 'world': 'உலகம்',
+                'National': 'தேசிய', 'national': 'தேசிய'
+            };
+            return taMap[cat] || cat;
+        }
+        if (language === 'te') {
+            const teMap = {
+                'Politics': 'రాజకీయాలు', 'politics': 'రాజకీయాలు',
+                'Sports': 'క్రీడలు', 'sports': 'క్రీడలు',
+                'Business': 'వ్యాపారం', 'business': 'వ్యాపారం',
+                'Entertainment': 'వినోదం', 'entertainment': 'వినోదం',
+                'Technology': 'సాంకేతికత', 'technology': 'సాంకేతికత',
+                'Karnataka': 'కర్ణాటక', 'karnataka': 'కర్ణాటక',
+                'World': 'ప్రపంచం', 'world': 'ప్రపంచం',
+                'National': 'జాతీయ', 'national': 'జాతీయ'
+            };
+            return teMap[cat] || cat;
+        }
+        if (language === 'hi') {
+            const hiMap = {
+                'Politics': 'राजनीति', 'politics': 'राजनीति',
+                'Sports': 'खेल', 'sports': 'खेल',
+                'Business': 'व्यापार', 'business': 'व्यापार',
+                'Entertainment': 'मनोरंजन', 'entertainment': 'मनोरंजन',
+                'Technology': 'प्रौद्योगिकी', 'technology': 'प्रौद्योगिकी',
+                'Karnataka': 'कर्नाटक', 'karnataka': 'कर्नाटक',
+                'World': 'विश्व', 'world': 'विश्व',
+                'National': 'राष्ट्रीय', 'national': 'राष्ट्रीय'
+            };
+            return hiMap[cat] || cat;
+        }
+        if (language === 'ml') {
+            const mlMap = {
+                'Politics': 'രാഷ്ട്രീയം', 'politics': 'രാഷ്ട്രീയം',
+                'Sports': 'കായികം', 'sports': 'കായികം',
+                'Business': 'ബിസിനസ്', 'business': 'ബിസിനസ്',
+                'Entertainment': 'വിനോദം', 'entertainment': 'വിനോദം',
+                'Technology': 'സാങ്കേതികവിദ്യ', 'technology': 'സാങ്കേതികവിദ്യ',
+                'Karnataka': 'കർണാടക', 'karnataka': 'കർണാടക',
+                'World': 'ലോകം', 'world': 'ലോകം',
+                'National': 'ദേശീയ', 'national': 'ദേശീയ'
+            };
+            return mlMap[cat] || cat;
+        }
+        return cat.replace(/\b\w/g, c => c.toUpperCase());
+    })();
 
     // Check if breaking news is still valid (within 1 hour)
     const isBreaking = article.is_breaking && 
@@ -231,12 +304,10 @@ Shared from Edens News`;
                                 <div className="sparkle" style={{ bottom: '-5px', left: '-5px', animationDelay: '0.7s', opacity: '0.5' }}></div>
                             </Badge>
                         )}
-                        {viewCount > 0 && (
-                            <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 glass-effect animate-zoom-in">
-                                <Eye className="w-3 h-3 animate-pulse" style={{ animationDuration: '3s' }} />
-                                <span className="font-semibold">{viewCount}</span>
-                            </div>
-                        )}
+                        <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 glass-effect animate-zoom-in">
+                            <Eye className="w-3 h-3 animate-pulse" style={{ animationDuration: '3s' }} />
+                            <span className="font-semibold">{viewCount}</span>
+                        </div>
                     </div>
                     <div className="p-5 space-y-3 flex-1 flex flex-col">
                         <Badge className={`${categoryColors[article.category] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'} transition-bounce w-fit hover:scale-110`}>

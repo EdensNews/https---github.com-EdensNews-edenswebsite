@@ -47,20 +47,25 @@ export const analyticsRepo = {
   },
   async trackView(articleId, userId = null) {
     try {
-      const { data, error } = await supabase
-        .from(TABLE)
-        .insert({
+      const API_URL = 'https://api.edensnews.com/api';
+      const response = await fetch(`${API_URL}/analytics/view`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           article_id: articleId,
           user_id: userId,
-          viewed_at: new Date().toISOString(),
-          ip_address: null, // We'll get this from the client if needed
           user_agent: navigator.userAgent
         })
-        .select()
-        .single()
+      });
       
-      if (error) throw error
-      return data
+      if (!response.ok) {
+        throw new Error('Failed to track view');
+      }
+      
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Failed to track view:', error)
       return null
