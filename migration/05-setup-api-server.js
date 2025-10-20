@@ -265,6 +265,73 @@ app.get('/api/article-categories/:articleId', async (req, res) => {
   }
 });
 
+// Create category
+app.post('/api/categories', async (req, res) => {
+  try {
+    const { name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO categories (name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+       RETURNING *`,
+      [name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description]
+    );
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating category:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update category
+app.put('/api/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE categories 
+       SET name_en = $1, name_kn = $2, name_ta = $3, name_te = $4, 
+           name_hi = $5, name_ml = $6, slug = $7, description = $8
+       WHERE id = $9
+       RETURNING *`,
+      [name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description, id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete category
+app.delete('/api/categories/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // First delete all article_categories references
+    await pool.query('DELETE FROM article_categories WHERE category_id = $1', [id]);
+    
+    // Then delete the category
+    const result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING *', [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Link article to category
 app.post('/api/article-categories', async (req, res) => {
   try {

@@ -67,6 +67,26 @@ class DatabaseClient {
     return this.request('/categories');
   }
 
+  async createCategory(category) {
+    return this.request('/categories', {
+      method: 'POST',
+      body: JSON.stringify(category),
+    });
+  }
+
+  async updateCategory(id, updates) {
+    return this.request(`/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+  }
+
+  async deleteCategory(id) {
+    return this.request(`/categories/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Bookmarks
   async getBookmarks(userId) {
     return this.request(`/bookmarks/${userId}`);

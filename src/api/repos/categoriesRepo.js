@@ -22,20 +22,32 @@ export const categoriesRepo = {
   },
 
   async create(category) {
-    // Category creation not implemented in API yet
-    console.warn('Category creation not yet implemented in new API')
-    throw new Error('Not implemented')
+    try {
+      const data = await db.createCategory(category)
+      return data
+    } catch (error) {
+      console.error('[categoriesRepo] create error:', error)
+      throw error
+    }
   },
 
   async update(id, updates) {
-    // Category update not implemented in API yet
-    console.warn('Category update not yet implemented in new API')
-    throw new Error('Not implemented')
+    try {
+      const data = await db.updateCategory(id, updates)
+      return data
+    } catch (error) {
+      console.error('[categoriesRepo] update error:', error)
+      throw error
+    }
   },
 
   async remove(id) {
-    // Category deletion not implemented in API yet
-    console.warn('Category deletion not yet implemented in new API')
-    throw new Error('Not implemented')
+    try {
+      await db.deleteCategory(id)
+      return true
+    } catch (error) {
+      console.error('[categoriesRepo] remove error:', error)
+      throw error
+    }
   }
 }
