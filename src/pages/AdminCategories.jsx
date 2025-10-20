@@ -59,10 +59,6 @@ function AdminCategoriesContent() {
     const payload = { 
       name_en: formData.name_en, 
       name_kn: formData.name_kn, 
-      name_ta: formData.name_ta || null,
-      name_te: formData.name_te || null,
-      name_hi: formData.name_hi || null,
-      name_ml: formData.name_ml || null,
       slug,
       description: formData.description || null
     };
@@ -85,9 +81,10 @@ function AdminCategoriesContent() {
   const handleEdit = (category) => {
     setEditingCategory(category);
     setFormData({
-      name_en: category.name || category.name_en || '',
+      name_en: category.name_en || '',
       name_kn: category.name_kn || '',
-      slug: category.slug || ''
+      slug: category.slug || '',
+      description: category.description || ''
     });
   };
 
@@ -177,7 +174,7 @@ function AdminCategoriesContent() {
                     <div key={category.id} className="flex items-center justify-between p-4 border border-gray-700 rounded-lg">
                       <div>
                         <h3 className="font-medium text-gray-200">
-                          {language === 'kn' ? (category.name_kn || category.name || category.slug) : (category.name || category.name_kn || category.slug)}
+                          {language === 'kn' ? (category.name_kn || category.name_en || category.slug) : (category.name_en || category.name_kn || category.slug)}
                         </h3>
                         <p className="text-sm text-gray-400">Slug: {category.slug}</p>
                       </div>

@@ -273,13 +273,13 @@ app.get('/api/article-categories/:articleId', async (req, res) => {
 // Create category
 app.post('/api/categories', async (req, res) => {
   try {
-    const { name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description } = req.body;
+    const { name_en, name_kn, slug, description } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO categories (name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+      `INSERT INTO categories (name_en, name_kn, slug, description, created_at)
+       VALUES ($1, $2, $3, $4, NOW())
        RETURNING *`,
-      [name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description]
+      [name_en, name_kn, slug, description]
     );
     
     res.json(result.rows[0]);
@@ -293,15 +293,14 @@ app.post('/api/categories', async (req, res) => {
 app.put('/api/categories/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description } = req.body;
+    const { name_en, name_kn, slug, description } = req.body;
     
     const result = await pool.query(
       `UPDATE categories 
-       SET name_en = $1, name_kn = $2, name_ta = $3, name_te = $4, 
-           name_hi = $5, name_ml = $6, slug = $7, description = $8
-       WHERE id = $9
+       SET name_en = $1, name_kn = $2, slug = $3, description = $4
+       WHERE id = $5
        RETURNING *`,
-      [name_en, name_kn, name_ta, name_te, name_hi, name_ml, slug, description, id]
+      [name_en, name_kn, slug, description, id]
     );
     
     if (result.rows.length === 0) {
