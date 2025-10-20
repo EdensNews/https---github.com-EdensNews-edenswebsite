@@ -244,6 +244,11 @@ app.get('/api/articles/search/:query', async (req, res) => {
 
 app.get('/api/categories', async (req, res) => {
   try {
+    // Prevent caching for categories
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     const result = await pool.query('SELECT * FROM categories ORDER BY name_en');
     res.json(result.rows);
   } catch (error) {

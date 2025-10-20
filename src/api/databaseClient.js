@@ -64,7 +64,8 @@ class DatabaseClient {
 
   // Categories
   async getCategories() {
-    return this.request('/categories');
+    // Add timestamp to prevent caching
+    return this.request(`/categories?_t=${Date.now()}`);
   }
 
   async createCategory(category) {

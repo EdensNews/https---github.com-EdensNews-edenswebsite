@@ -56,7 +56,16 @@ function AdminCategoriesContent() {
       return;
     }
     const slug = formData.slug || generateSlug(formData.name_en);
-    const payload = { name: formData.name_en, name_kn: formData.name_kn, slug };
+    const payload = { 
+      name_en: formData.name_en, 
+      name_kn: formData.name_kn, 
+      name_ta: formData.name_ta || null,
+      name_te: formData.name_te || null,
+      name_hi: formData.name_hi || null,
+      name_ml: formData.name_ml || null,
+      slug,
+      description: formData.description || null
+    };
     try {
       if (editingCategory?.id) {
         await categoriesRepo.update(editingCategory.id, payload);
@@ -66,10 +75,10 @@ function AdminCategoriesContent() {
         toast({ title: 'Category created' });
       }
       resetForm();
-      loadCategories();
+      await loadCategories(); // Wait for reload
     } catch (error) {
       console.error('Failed to save category:', error);
-      toast({ title: 'Failed to save category', variant: 'destructive' });
+      toast({ title: 'Failed to save category: ' + error.message, variant: 'destructive' });
     }
   };
 
