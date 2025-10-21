@@ -276,10 +276,10 @@ app.post('/api/categories', async (req, res) => {
     const { name_en, name_kn, slug, description } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO categories (name_en, name_kn, slug, description, created_at)
-       VALUES ($1, $2, $3, $4, NOW())
+      `INSERT INTO categories (name, name_en, name_kn, slug, description, created_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING *`,
-      [name_en, name_kn, slug, description]
+      [name_en, name_en, name_kn, slug, description]
     );
     
     res.json(result.rows[0]);
@@ -297,10 +297,10 @@ app.put('/api/categories/:id', async (req, res) => {
     
     const result = await pool.query(
       `UPDATE categories 
-       SET name_en = $1, name_kn = $2, slug = $3, description = $4
-       WHERE id = $5
+       SET name = $1, name_en = $2, name_kn = $3, slug = $4, description = $5
+       WHERE id = $6
        RETURNING *`,
-      [name_en, name_kn, slug, description, id]
+      [name_en, name_en, name_kn, slug, description, id]
     );
     
     if (result.rows.length === 0) {

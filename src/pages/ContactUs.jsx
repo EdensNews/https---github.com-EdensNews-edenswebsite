@@ -10,6 +10,7 @@ export default function ContactUs() {
             <Helmet>
                 <title>{language === 'kn' ? 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ' : 'Contact Us'} | Edens News</title>
                 <meta name="description" content="Get in touch with Edens News team" />
+                <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com/contact'} />
             </Helmet>
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

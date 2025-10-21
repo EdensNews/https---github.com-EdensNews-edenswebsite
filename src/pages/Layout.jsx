@@ -1,6 +1,5 @@
-
-
 import { useEffect } from "react";
+import { Helmet } from 'react-helmet-async';
 import PropTypes from 'prop-types';
 import { LanguageProvider } from "../components/LanguageContext";
 import Header from "../components/news/Header";
@@ -14,6 +13,8 @@ export default function Layout({ children }) {
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
+
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://edensnews.com';
 
   // Scroll to top on route change
   useEffect(() => {
@@ -36,6 +37,23 @@ export default function Layout({ children }) {
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 font-sans transition-all duration-500">
+        <Helmet>
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "NewsMediaOrganization",
+              "name": "Edens News",
+              "url": siteUrl,
+              "logo": `${siteUrl}/logo.png`,
+              "sameAs": [
+                // Add real profiles in Admin → Settings when available
+              ],
+              "areaServed": "IN",
+              "inLanguage": "en",
+              "foundingDate": "2025-01-01"
+            })}
+          </script>
+        </Helmet>
         <style>
           {`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Kannada:wght@400;500;700&display=swap');

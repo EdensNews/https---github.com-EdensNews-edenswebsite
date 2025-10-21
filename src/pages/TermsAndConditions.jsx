@@ -123,6 +123,7 @@ export default function TermsAndConditions() {
             <Helmet>
                 <title>{currentContent.title} | Edens News</title>
                 <meta name="description" content={`${currentContent.title} for Edens News - Multilingual News Portal`} />
+                <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com/terms'} />
             </Helmet>
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

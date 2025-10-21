@@ -9,6 +9,7 @@ export default function AboutUs() {
             <Helmet>
                 <title>{language === 'kn' ? 'ನಮ್ಮ ಬಗ್ಗೆ' : 'About Us'} | Edens News</title>
                 <meta name="description" content="Learn about Edens News - Your trusted multilingual news source" />
+                <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com/about'} />
             </Helmet>
 
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

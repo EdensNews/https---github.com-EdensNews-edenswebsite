@@ -113,6 +113,7 @@ export default function Home() {
             <Helmet>
                 <title>{`${pageTitle} | Edens News`}</title>
                 <meta name="description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news in Kannada, English, Tamil, Telugu, Hindi, and Malayalam.`} />
+                <link rel="canonical" href={typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com/'} />
 
                 {/* Open Graph / Facebook */}
                 <meta property="og:type" content="website" />

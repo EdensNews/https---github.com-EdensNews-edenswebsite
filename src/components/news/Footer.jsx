@@ -9,7 +9,7 @@ import { Mail, Phone, MapPin, Facebook, Twitter, Youtube, Instagram } from 'luci
 
 const navigationLinks = [
     { name: 'Home', page: 'Home', kn_name: 'ಮುಖಪುಟ' },
-    { name: 'Live TV', page: 'LiveTV', kn_name: 'ಲೈವ್ ಟಿವಿ' },
+    { name: 'Live TV', page: 'LiveTV', kn_name: 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್' },
     { name: 'Search', page: 'Search', kn_name: 'ಹುಡುಕಿ' },
     { name: 'Admin', page: 'Admin', kn_name: 'ಆಡ್ಮಿನ್' }
 ];

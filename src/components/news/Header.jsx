@@ -27,7 +27,7 @@ import {
 
 const navLinks = [
   { name: 'Home', page: 'Home', kn_name: 'ಮುಖಪುಟ' },
-  { name: 'Live TV', page: 'LiveTV', kn_name: 'ಲೈವ್ ಟಿವಿ', isLive: true },
+  { name: 'Live TV', page: 'LiveTV', kn_name: 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್', isLive: true },
   { name: 'Categories', kn_name: 'ವರ್ಗಗಳು', type: 'dropdown' },
   { name: 'Search', page: 'Search', kn_name: 'ಹುಡುಕಿ' }
 ];

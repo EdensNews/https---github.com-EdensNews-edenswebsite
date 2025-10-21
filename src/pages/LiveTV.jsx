@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { streamSettingsRepo } from '@/api/repos/streamSettingsRepo';
 import { scheduleRepo } from '@/api/repos/scheduleRepo';
 import { useLanguage } from '@/components/LanguageContext';
@@ -55,9 +56,11 @@ export default function LiveTV() {
         return null;
     };
     
-    const streamTitle = streamSettings?.subtitle || (language === 'kn' ? 'ಈಡನ್ ನ್ಯೂಸ್ ಲೈವ್' : 'Eden News Live');
+    const streamTitle = streamSettings?.subtitle || (language === 'kn' ? 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್ ಲೈವ್' : 'Eden News Live');
     const embedUrl = getYouTubeEmbedUrl(streamSettings?.stream_url);
     const chatUrl = getYouTubeChatUrl(streamSettings?.stream_url);
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href : 'https://edensnews.com/livetv';
 
     // Load broadcast schedule from database
     const [broadcastSchedule, setBroadcastSchedule] = useState([]);
@@ -161,6 +164,24 @@ export default function LiveTV() {
     
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Helmet>
+                <title>{`${streamTitle} | Edens News`}</title>
+                <link rel="canonical" href={canonicalUrl} />
+                <meta name="description" content={language === 'kn' ? 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್ ಲೈವ್ ಪ್ರಸಾರವನ್ನು ವೀಕ್ಷಿಸಿ.' : 'Watch Edens News live broadcast.'} />
+                <meta name="author" content="Edens News" />
+
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content={canonicalUrl} />
+                <meta property="og:title" content={`${streamTitle} | Edens News`} />
+                <meta property="og:description" content={language === 'kn' ? 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್ ಲೈವ್ ಪ್ರಸಾರವನ್ನು ವೀಕ್ಷಿಸಿ.' : 'Watch Edens News live broadcast.'} />
+                <meta property="og:site_name" content="Edens News" />
+                <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
+
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:site" content="@edensnews" />
+                <meta name="twitter:title" content={`${streamTitle} | Edens News`} />
+                <meta name="twitter:description" content={language === 'kn' ? 'ಈಡೆನ್ಸ್ ನ್ಯೂಸ್ ಲೈವ್ ಪ್ರಸಾರವನ್ನು ವೀಕ್ಷಿಸಿ.' : 'Watch Edens News live broadcast.'} />
+            </Helmet>
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
                 <Tv className="w-10 h-10 text-red-600 animate-pulse"/>
