@@ -51,11 +51,7 @@ export default function TermsAndConditions() {
                     content: 'These terms and conditions are governed by and construed in accordance with the laws of India and you irrevocably submit to the exclusive jurisdiction of the courts in that location.'
                 },
                 {
-                    title: '11. Advertising',
-                    content: 'Edens News displays third-party advertisements through Google AdSense and other advertising partners. We are not responsible for the content of these advertisements. Clicking on advertisements is at your own risk.'
-                },
-                {
-                    title: '12. Intellectual Property',
+                    title: '11. Intellectual Property',
                     content: 'All content on Edens News, including but not limited to text, graphics, logos, images, audio clips, video clips, and software, is the property of Edens News or its content suppliers and is protected by Indian and international copyright laws.'
                 }
             ]
@@ -105,11 +101,7 @@ export default function TermsAndConditions() {
                     content: 'ಈ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಭಾರತದ ಕಾನೂನುಗಳ ಪ್ರಕಾರ ನಿಯಂತ್ರಿಸಲಾಗುತ್ತದೆ ಮತ್ತು ಅರ್ಥೈಸಲಾಗುತ್ತದೆ.'
                 },
                 {
-                    title: '11. ಜಾಹೀರಾತು',
-                    content: 'ಈಡನ್ಸ್ ನ್ಯೂಸ್ Google AdSense ಮತ್ತು ಇತರ ಜಾಹೀರಾತು ಪಾಲುದಾರರ ಮೂಲಕ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಜಾಹೀರಾತುಗಳನ್ನು ಪ್ರದರ್ಶಿಸುತ್ತದೆ.'
-                },
-                {
-                    title: '12. ಬೌದ್ಧಿಕ ಆಸ್ತಿ',
+                    title: '11. ಬೌದ್ಧಿಕ ಆಸ್ತಿ',
                     content: 'ಈಡನ್ಸ್ ನ್ಯೂಸ್‌ನಲ್ಲಿನ ಎಲ್ಲಾ ವಿಷಯಗಳು ಈಡನ್ಸ್ ನ್ಯೂಸ್ ಅಥವಾ ಅದರ ವಿಷಯ ಪೂರೈಕೆದಾರರ ಆಸ್ತಿಯಾಗಿದೆ ಮತ್ತು ಭಾರತೀಯ ಮತ್ತು ಅಂತರರಾಷ್ಟ್ರೀಯ ಹಕ್ಕುಸ್ವಾಮ್ಯ ಕಾನೂನುಗಳಿಂದ ರಕ್ಷಿಸಲ್ಪಟ್ಟಿದೆ.'
                 }
             ]

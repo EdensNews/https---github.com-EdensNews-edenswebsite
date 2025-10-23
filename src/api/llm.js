@@ -56,9 +56,11 @@ async function invokeGemini({ prompt, response_json_schema }) {
 
   function computeMaxTokens(promptText) {
     const approxTokens = Math.ceil((promptText || '').length / 4)
-    if (approxTokens > 3500) return 512
-    if (approxTokens > 2500) return 768
-    return 1024
+    // Increased token limits to support ~801 words (approximately 1000-1200 tokens)
+    if (approxTokens > 5000) return 1200
+    if (approxTokens > 3500) return 1500
+    if (approxTokens > 2500) return 1800
+    return 2048
   }
   const body = {
     contents: [

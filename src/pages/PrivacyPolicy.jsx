@@ -28,56 +28,51 @@ export default function PrivacyPolicy() {
                 {
                     icon: Lock,
                     title: '4. Third-Party Services',
-                    content: 'We use third-party services including Google Analytics for website analytics, Google AdSense for advertising, and Supabase for data storage. These services may collect information sent by your browser as part of a web page request, such as cookies or your IP address. We also embed YouTube videos which may set cookies and collect data according to YouTube\'s privacy policy.'
-                },
-                {
-                    icon: Shield,
-                    title: '5. Google AdSense',
-                    content: 'We use Google AdSense to display advertisements on our website. Google uses cookies to serve ads based on your prior visits to our website or other websites. You may opt out of personalized advertising by visiting Google\'s Ads Settings. Third-party vendors, including Google, use cookies to serve ads based on your past visits to our website.'
+                    content: 'We use third-party services including Google Analytics for website analytics and Supabase for data storage. These services may collect information sent by your browser as part of a web page request, such as cookies or your IP address. We also embed YouTube videos which may set cookies and collect data according to YouTube\'s privacy policy.'
                 },
                 {
                     icon: Lock,
-                    title: '6. Data Security',
+                    title: '5. Data Security',
                     content: 'We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the Internet or electronic storage is 100% secure, and we cannot guarantee absolute security.'
                 },
                 {
                     icon: Eye,
-                    title: '7. Your Data Rights',
+                    title: '6. Your Data Rights',
                     content: 'You have the right to: access the personal information we hold about you; request correction of inaccurate information; request deletion of your personal information; object to processing of your personal information; request restriction of processing your personal information; request transfer of your personal information; and withdraw consent at any time where we rely on consent to process your personal information.'
                 },
                 {
                     icon: Shield,
-                    title: '8. Children\'s Privacy',
+                    title: '7. Children\'s Privacy',
                     content: 'Our website is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us so that we can take necessary actions.'
                 },
                 {
                     icon: Cookie,
-                    title: '9. Analytics and Performance',
+                    title: '8. Analytics and Performance',
                     content: 'We use Google Analytics to understand how visitors use our website. Google Analytics collects information such as how often users visit our site, what pages they visit, and what other sites they used prior to coming to our site. We use the information we get from Google Analytics to improve our website and services.'
                 },
                 {
                     icon: Mail,
-                    title: '10. Email Communications',
+                    title: '9. Email Communications',
                     content: 'If you subscribe to our newsletter or create an account, we may send you emails about news updates, new features, or other information we think you might find interesting. You can unsubscribe from these communications at any time by clicking the unsubscribe link in the email or by contacting us.'
                 },
                 {
                     icon: Lock,
-                    title: '11. Data Retention',
+                    title: '10. Data Retention',
                     content: 'We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, unless a longer retention period is required or permitted by law. When we no longer need your personal information, we will securely delete or anonymize it.'
                 },
                 {
                     icon: Shield,
-                    title: '12. International Data Transfers',
+                    title: '11. International Data Transfers',
                     content: 'Your information may be transferred to and maintained on computers located outside of your state, province, country, or other governmental jurisdiction where data protection laws may differ. We will take all steps reasonably necessary to ensure that your data is treated securely.'
                 },
                 {
                     icon: AlertCircle,
-                    title: '13. Changes to This Privacy Policy',
+                    title: '12. Changes to This Privacy Policy',
                     content: 'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. You are advised to review this Privacy Policy periodically for any changes.'
                 },
                 {
                     icon: Mail,
-                    title: '14. Contact Us',
+                    title: '13. Contact Us',
                     content: 'If you have any questions about this Privacy Policy, please contact us through our website contact form or email us. We will respond to your inquiry as soon as possible.'
                 }
             ]
@@ -104,56 +99,51 @@ export default function PrivacyPolicy() {
                 {
                     icon: Lock,
                     title: '4. ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸೇವೆಗಳು',
-                    content: 'ವೆಬ್‌ಸೈಟ್ ವಿಶ್ಲೇಷಣೆಗಾಗಿ Google Analytics, ಜಾಹೀರಾತಿಗಾಗಿ Google AdSense ಮತ್ತು ಡೇಟಾ ಸಂಗ್ರಹಣೆಗಾಗಿ Supabase ಸೇರಿದಂತೆ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸೇವೆಗಳನ್ನು ನಾವು ಬಳಸುತ್ತೇವೆ.'
-                },
-                {
-                    icon: Shield,
-                    title: '5. Google AdSense',
-                    content: 'ನಮ್ಮ ವೆಬ್‌ಸೈಟ್‌ನಲ್ಲಿ ಜಾಹೀರಾತುಗಳನ್ನು ಪ್ರದರ್ಶಿಸಲು ನಾವು Google AdSense ಅನ್ನು ಬಳಸುತ್ತೇವೆ. ನಮ್ಮ ವೆಬ್‌ಸೈಟ್ ಅಥವಾ ಇತರ ವೆಬ್‌ಸೈಟ್‌ಗಳಿಗೆ ನಿಮ್ಮ ಹಿಂದಿನ ಭೇಟಿಗಳ ಆಧಾರದ ಮೇಲೆ ಜಾಹೀರಾತುಗಳನ್ನು ನೀಡಲು Google ಕುಕೀಗಳನ್ನು ಬಳಸುತ್ತದೆ.'
+                    content: 'ವೆಬ್‌ಸೈಟ್ ವಿಶ್ಲೇಷಣೆಗಾಗಿ Google Analytics ಮತ್ತು ಡೇಟಾ ಸಂಗ್ರಹಣೆಗಾಗಿ Supabase ಸೇರಿದಂತೆ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಸೇವೆಗಳನ್ನು ನಾವು ಬಳಸುತ್ತೇವೆ.'
                 },
                 {
                     icon: Lock,
-                    title: '6. ಡೇಟಾ ಸುರಕ್ಷತೆ',
+                    title: '5. ಡೇಟಾ ಸುರಕ್ಷತೆ',
                     content: 'ಅನಧಿಕೃತ ಪ್ರವೇಶ, ಬದಲಾವಣೆ, ಬಹಿರಂಗಪಡಿಸುವಿಕೆ ಅಥವಾ ನಾಶದ ವಿರುದ್ಧ ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ರಕ್ಷಿಸಲು ನಾವು ಸೂಕ್ತ ತಾಂತ್ರಿಕ ಮತ್ತು ಸಾಂಸ್ಥಿಕ ಭದ್ರತಾ ಕ್ರಮಗಳನ್ನು ಅನುಷ್ಠಾನಗೊಳಿಸುತ್ತೇವೆ.'
                 },
                 {
                     icon: Eye,
-                    title: '7. ನಿಮ್ಮ ಡೇಟಾ ಹಕ್ಕುಗಳು',
+                    title: '6. ನಿಮ್ಮ ಡೇಟಾ ಹಕ್ಕುಗಳು',
                     content: 'ನಾವು ನಿಮ್ಮ ಬಗ್ಗೆ ಹೊಂದಿರುವ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಪ್ರವೇಶಿಸುವ; ತಪ್ಪು ಮಾಹಿತಿಯ ತಿದ್ದುಪಡಿಯನ್ನು ವಿನಂತಿಸುವ; ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯ ಅಳಿಸುವಿಕೆಯನ್ನು ವಿನಂತಿಸುವ ಹಕ್ಕನ್ನು ನೀವು ಹೊಂದಿರುತ್ತೀರಿ.'
                 },
                 {
                     icon: Shield,
-                    title: '8. ಮಕ್ಕಳ ಗೋಪ್ಯತೆ',
+                    title: '7. ಮಕ್ಕಳ ಗೋಪ್ಯತೆ',
                     content: 'ನಮ್ಮ ವೆಬ್‌ಸೈಟ್ 13 ವರ್ಷಕ್ಕಿಂತ ಕಡಿಮೆ ವಯಸ್ಸಿನ ಮಕ್ಕಳಿಗೆ ಉದ್ದೇಶಿಸಿಲ್ಲ. 13 ವರ್ಷಕ್ಕಿಂತ ಕಡಿಮೆ ವಯಸ್ಸಿನ ಮಕ್ಕಳಿಂದ ನಾವು ಉದ್ದೇಶಪೂರ್ವಕವಾಗಿ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಸಂಗ್ರಹಿಸುವುದಿಲ್ಲ.'
                 },
                 {
                     icon: Cookie,
-                    title: '9. ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಕಾರ್ಯಕ್ಷಮತೆ',
+                    title: '8. ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಕಾರ್ಯಕ್ಷಮತೆ',
                     content: 'ಸಂದರ್ಶಕರು ನಮ್ಮ ವೆಬ್‌ಸೈಟ್ ಅನ್ನು ಹೇಗೆ ಬಳಸುತ್ತಾರೆ ಎಂಬುದನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ನಾವು Google Analytics ಅನ್ನು ಬಳಸುತ್ತೇವೆ.'
                 },
                 {
                     icon: Mail,
-                    title: '10. ಇಮೇಲ್ ಸಂವಹನಗಳು',
+                    title: '9. ಇಮೇಲ್ ಸಂವಹನಗಳು',
                     content: 'ನೀವು ನಮ್ಮ ಸುದ್ದಿಪತ್ರಕ್ಕೆ ಚಂದಾದಾರರಾದರೆ ಅಥವಾ ಖಾತೆಯನ್ನು ರಚಿಸಿದರೆ, ಸುದ್ದಿ ನವೀಕರಣಗಳು, ಹೊಸ ವೈಶಿಷ್ಟ್ಯಗಳು ಅಥವಾ ಇತರ ಮಾಹಿತಿಯ ಬಗ್ಗೆ ನಾವು ನಿಮಗೆ ಇಮೇಲ್‌ಗಳನ್ನು ಕಳುಹಿಸಬಹುದು.'
                 },
                 {
                     icon: Lock,
-                    title: '11. ಡೇಟಾ ಧಾರಣ',
+                    title: '10. ಡೇಟಾ ಧಾರಣ',
                     content: 'ಈ ಗೋಪ್ಯತಾ ನೀತಿಯಲ್ಲಿ ವಿವರಿಸಿದ ಉದ್ದೇಶಗಳನ್ನು ಪೂರೈಸಲು ಅಗತ್ಯವಿರುವವರೆಗೆ ಮಾತ್ರ ನಾವು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಮಾಹಿತಿಯನ್ನು ಉಳಿಸಿಕೊಳ್ಳುತ್ತೇವೆ.'
                 },
                 {
                     icon: Shield,
-                    title: '12. ಅಂತರರಾಷ್ಟ್ರೀಯ ಡೇಟಾ ವರ್ಗಾವಣೆಗಳು',
+                    title: '11. ಅಂತರರಾಷ್ಟ್ರೀಯ ಡೇಟಾ ವರ್ಗಾವಣೆಗಳು',
                     content: 'ನಿಮ್ಮ ಮಾಹಿತಿಯನ್ನು ನಿಮ್ಮ ರಾಜ್ಯ, ಪ್ರಾಂತ್ಯ, ದೇಶ ಅಥವಾ ಇತರ ಸರ್ಕಾರಿ ನ್ಯಾಯವ್ಯಾಪ್ತಿಯ ಹೊರಗೆ ಇರುವ ಕಂಪ್ಯೂಟರ್‌ಗಳಿಗೆ ವರ್ಗಾಯಿಸಬಹುದು ಮತ್ತು ನಿರ್ವಹಿಸಬಹುದು.'
                 },
                 {
                     icon: AlertCircle,
-                    title: '13. ಈ ಗೋಪ್ಯತಾ ನೀತಿಗೆ ಬದಲಾವಣೆಗಳು',
+                    title: '12. ಈ ಗೋಪ್ಯತಾ ನೀತಿಗೆ ಬದಲಾವಣೆಗಳು',
                     content: 'ನಾವು ಕಾಲಕಾಲಕ್ಕೆ ನಮ್ಮ ಗೋಪ್ಯತಾ ನೀತಿಯನ್ನು ನವೀಕರಿಸಬಹುದು. ಈ ಪುಟದಲ್ಲಿ ಹೊಸ ಗೋಪ್ಯತಾ ನೀತಿಯನ್ನು ಪೋಸ್ಟ್ ಮಾಡುವ ಮೂಲಕ ಮತ್ತು "ಕೊನೆಯ ನವೀಕರಣ" ದಿನಾಂಕವನ್ನು ನವೀಕರಿಸುವ ಮೂಲಕ ಯಾವುದೇ ಬದಲಾವಣೆಗಳನ್ನು ನಾವು ನಿಮಗೆ ತಿಳಿಸುತ್ತೇವೆ.'
                 },
                 {
                     icon: Mail,
-                    title: '14. ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',
+                    title: '13. ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',
                     content: 'ಈ ಗೋಪ್ಯತಾ ನೀತಿಯ ಬಗ್ಗೆ ನಿಮಗೆ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳಿದ್ದರೆ, ದಯವಿಟ್ಟು ನಮ್ಮ ವೆಬ್‌ಸೈಟ್ ಸಂಪರ್ಕ ಫಾರ್ಮ್ ಮೂಲಕ ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ ಅಥವಾ ನಮಗೆ ಇಮೇಲ್ ಮಾಡಿ.'
                 }
             ]

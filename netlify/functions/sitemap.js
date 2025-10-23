@@ -15,10 +15,37 @@ export const handler = async (event) => {
   
   <!-- Homepage -->
   <url>
-    <loc>https://edensnews.com/</loc>
+    <loc>https://edensnews.com/home</loc>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
     <lastmod>${new Date().toISOString()}</lastmod>
+  </url>
+  
+  <!-- Static Pages -->
+  <url>
+    <loc>https://edensnews.com/livetv</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://edensnews.com/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://edensnews.com/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://edensnews.com/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://edensnews.com/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   
   <!-- Category Pages -->

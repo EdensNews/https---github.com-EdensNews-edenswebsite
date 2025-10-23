@@ -6,6 +6,11 @@
   NODE_VERSION = "18"
 
 [[redirects]]
+  from = "/"
+  to = "/home"
+  status = 301
+
+[[redirects]]
   from = "/.netlify/functions/share-og"
   to = "/.netlify/functions/share-og"
   status = 200
