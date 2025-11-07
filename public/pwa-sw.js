@@ -1,5 +1,5 @@
 // PWA Service Worker for Edens News
-const CACHE_NAME = 'edens-news-v2';
+const CACHE_NAME = 'edens-news-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
@@ -93,14 +93,14 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New breaking news!',
-    icon: 'https://base44.com/logo_v2.svg',
-    badge: 'https://base44.com/logo_v2.svg',
+    icon: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png',
+    badge: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png',
     vibrate: [200, 100, 200],
     tag: 'breaking-news',
     requireInteraction: true,
     actions: [
-      { action: 'open', title: 'Read Now', icon: 'https://base44.com/logo_v2.svg' },
-      { action: 'close', title: 'Close', icon: 'https://base44.com/logo_v2.svg' }
+      { action: 'open', title: 'Read Now', icon: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png' },
+      { action: 'close', title: 'Close', icon: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png' }
     ]
   };
 

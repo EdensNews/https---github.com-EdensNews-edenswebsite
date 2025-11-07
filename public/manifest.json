@@ -9,9 +9,9 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://base44.com/logo_v2.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -24,21 +24,21 @@
       "short_name": "Latest",
       "description": "View latest news articles",
       "url": "/home",
-      "icons": [{ "src": "https://base44.com/logo_v2.svg", "sizes": "any" }]
+      "icons": [{ "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png", "sizes": "512x512", "type": "image/png" }]
     },
     {
       "name": "Live TV",
       "short_name": "Live",
       "description": "Watch live TV broadcast",
       "url": "/livetv",
-      "icons": [{ "src": "https://base44.com/logo_v2.svg", "sizes": "any" }]
+      "icons": [{ "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png", "sizes": "512x512", "type": "image/png" }]
     },
     {
       "name": "Bookmarks",
       "short_name": "Saved",
       "description": "View saved articles",
       "url": "/bookmarks",
-      "icons": [{ "src": "https://base44.com/logo_v2.svg", "sizes": "any" }]
+      "icons": [{ "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ad7ff9cf8628b96fa8c1c8/703b84b08_GeneratedImageAugust282025-9_11PM.png", "sizes": "512x512", "type": "image/png" }]
     }
   ],
   "screenshots": [

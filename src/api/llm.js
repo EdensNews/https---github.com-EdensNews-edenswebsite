@@ -1,6 +1,5 @@
 // Lightweight LLM wrapper that uses Gemini exclusively
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
 const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash'
 const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE || ''
 
@@ -76,38 +75,22 @@ async function invokeGemini({ prompt, response_json_schema }) {
 
   const apiVersions = ['v1', 'v1beta']
   let lastErr = null
-  // First attempt direct candidates
+  // Always use serverless proxy to avoid exposing API key and CORS/leak issues
+  const base = FUNCTIONS_BASE || ''
   for (const ver of apiVersions) {
     for (const model of modelCandidates) {
-      const directUrl = `https://generativelanguage.googleapis.com/${ver}/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`
       try {
-        let res
-        try {
-          // Try direct first (works on some models in localhost)
-          res = await postWithRetry(directUrl, body)
-        } catch (err) {
-          // If proxy base configured, fallback to proxy
-          if (FUNCTIONS_BASE && /Failed to fetch|CORS|NetworkError|ERR_FAILED/i.test(err?.message || '')) {
-            res = await postWithRetry(`${FUNCTIONS_BASE}/.netlify/functions/gemini-proxy`, { model, apiVersion: ver, body })
-          } else {
-            throw err
-          }
-        }
+        const res = await postWithRetry(`${base}/.netlify/functions/gemini-proxy`, { model, apiVersion: ver, body })
         const data = await res.json()
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
         if (response_json_schema) {
           const jsonText = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/,'').trim()
-
-          // Try to parse the JSON directly first
           try {
             return JSON.parse(jsonText)
           } catch (e) {
-            // If that fails, try to extract just the JSON object part
-            const jsonMatch = jsonText.match(/\{.*\}/s) // Match everything between first { and last }
+            const jsonMatch = jsonText.match(/\{.*\}/s)
             if (jsonMatch) {
-              try {
-                return JSON.parse(jsonMatch[0])
-              } catch (e2) {
+              try { return JSON.parse(jsonMatch[0]) } catch (e2) {
                 console.error('Gemini JSON parse error:', e2)
                 console.error('Original response:', text)
                 console.error('Extracted JSON:', jsonMatch[0])
@@ -119,7 +102,6 @@ async function invokeGemini({ prompt, response_json_schema }) {
         return { text }
       } catch (e) {
         lastErr = new Error(`${e?.message || e} for ${ver}/${model}`)
-        // Try the next candidate
       }
     }
   }
@@ -127,9 +109,6 @@ async function invokeGemini({ prompt, response_json_schema }) {
 }
 
 export async function InvokeLLM({ prompt, response_json_schema }) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('Missing VITE_GEMINI_API_KEY')
-  }
   return await invokeGemini({ prompt, response_json_schema })
 }
 
