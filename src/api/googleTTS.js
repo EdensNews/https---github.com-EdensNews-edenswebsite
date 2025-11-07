@@ -5,6 +5,7 @@
 
 const API_KEY = import.meta.env.VITE_GOOGLE_TTS_API_KEY;
 const API_ENDPOINT = 'https://texttospeech.googleapis.com/v1/text:synthesize';
+const FUNCTIONS_BASE = import.meta.env.VITE_FUNCTIONS_BASE || '';
 
 // Voice configuration for each language
 const VOICE_CONFIG = {
@@ -24,10 +25,6 @@ const VOICE_CONFIG = {
  * @returns {Promise<string>} - Base64 encoded audio data
  */
 export async function textToSpeech(text, language = 'en', speakingRate = 1.0) {
-    if (!API_KEY || API_KEY === 'your_google_cloud_api_key_here') {
-        throw new Error('Google TTS API key not configured');
-    }
-
     const voiceConfig = VOICE_CONFIG[language] || VOICE_CONFIG['en'];
 
     const requestBody = {
@@ -46,17 +43,17 @@ export async function textToSpeech(text, language = 'en', speakingRate = 1.0) {
     };
 
     try {
-        const response = await fetch(`${API_ENDPOINT}?key=${API_KEY}`, {
+        const response = await fetch(`${FUNCTIONS_BASE}/.netlify/functions/tts-proxy`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({ requestBody })
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error?.message || 'TTS API request failed');
+            const errorText = await response.text();
+            throw new Error(errorText || 'TTS proxy request failed');
         }
 
         const data = await response.json();
@@ -83,7 +80,7 @@ export function playAudio(base64Audio) {
  * @returns {boolean}
  */
 export function isGoogleTTSAvailable() {
-    return !!(API_KEY && API_KEY !== 'your_google_cloud_api_key_here');
+    return true;
 }
 
 /**

@@ -40,7 +40,7 @@
     <meta name="msapplication-TileColor" content="#dc2626" />
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.json?v=3" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -52,8 +52,12 @@
     <!-- PWA Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/pwa-sw.js')
+        window.addEventListener('load', async () => {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+          } catch (e) {}
+          navigator.serviceWorker.register('/pwa-sw-v3.js?v=1')
             .then(reg => console.log('PWA Service Worker registered'))
             .catch(err => console.log('PWA Service Worker registration failed:', err));
         });
@@ -67,6 +71,6 @@
     <script async="async" data-cfasync="false" src="//pl27911316.effectivegatecpm.com/e475895263f920662317880a36eea628/invoke.js"></script>
     <div id="container-e475895263f920662317880a36eea628"></div>
     
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.jsx?v=3"></script>
   </body>
 </html>
