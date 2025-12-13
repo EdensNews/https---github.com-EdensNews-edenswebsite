@@ -60,28 +60,29 @@ export default function ArticleDetail() {
     useEffect(() => {
         const fetchRelatedArticles = async () => {
             if (!article) return;
-            
+
             try {
                 let articles = [];
-                
+
                 // Try to get articles from same category first
                 if (article.category) {
-                    articles = await articlesRepo.listByCategory(article.category, { 
-                        limit: 10 
+                    articles = await articlesRepo.listByCategory(article.category, {
+                        limit: 10
                     });
-                    console.log('Related articles by category:', articles.length);
+
                 }
-                
-                // If no category articles, get latest articles as fallback
+
+                // If no category articles, we stop here (do not show random unrelated news)
                 if (articles.length === 0) {
-                    articles = await articlesRepo.list({ limit: 10 });
-                    console.log('Fallback to latest articles:', articles.length);
+                    if (articles.length === 0) {
+                        // No related articles
+                    }
                 }
-                
+
                 // Filter out current article and limit to 8
                 const filtered = articles.filter(a => a.id !== article.id).slice(0, 8);
                 setRelatedArticles(filtered);
-                console.log('Final related articles to display:', filtered.length);
+
             } catch (error) {
                 console.error("Failed to fetch related articles:", error);
             }
@@ -99,9 +100,9 @@ export default function ArticleDetail() {
                     const timer = setTimeout(async () => {
                         await analyticsRepo.trackView(articleId, user?.id);
                         setHasTrackedView(true);
-                        console.log(`Tracked view for article: ${articleId}`);
+
                     }, 3000);
-                    
+
                     return () => clearTimeout(timer);
                 } catch (error) {
                     console.error('Failed to track view:', error);
@@ -141,7 +142,7 @@ export default function ArticleDetail() {
             window.gtag('config', 'G-M8C1T8ZMN7', {
                 'page_title': `${currentTitle} | Edens News`,
                 'page_location': window.location.href,
-                'custom_map': {'dimension1': language}
+                'custom_map': { 'dimension1': language }
             });
         }
     }, [article, language, translated]);
@@ -215,7 +216,7 @@ export default function ArticleDetail() {
             const progress = (window.scrollY / totalHeight) * 100;
             setReadProgress(Math.min(progress, 100));
         };
-        
+
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -319,9 +320,9 @@ Shared from Edens News`;
         const url = encodeURIComponent(`${window.location.origin}/articledetail?id=${articleId}`);
         return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
     })();
-    
+
     // (removed unused generateThumbnail helper)
-    
+
     if (isLoading) {
         return (
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -337,7 +338,7 @@ Shared from Edens News`;
         return <div className="text-center py-20 dark:text-gray-300">Article not found.</div>;
     }
 
-    
+
 
     const title = (() => {
         if (!article) return '';
@@ -370,16 +371,16 @@ Shared from Edens News`;
     // Use article URL for WhatsApp sharing (not image URL)
     const waText = encodeURIComponent(`${title}\n\n${canonicalUrl}`);
     const waHref = `https://api.whatsapp.com/send?text=${waText}`;
-    
+
     // (removed duplicate translation effect to maintain stable hook order)
 
     return (
         <div className="bg-white dark:bg-gray-800 relative z-20">
             {/* Reading Progress Bar - Below Header */}
             <div className="fixed top-[60px] sm:top-[70px] left-0 right-0 h-1 bg-gray-300 dark:bg-gray-700 z-[9999] pointer-events-none shadow-lg">
-                <div 
+                <div
                     className="h-full bg-gradient-to-r from-red-600 via-orange-500 to-yellow-400 transition-all duration-150 ease-out"
-                    style={{ 
+                    style={{
                         width: `${readProgress}%`,
                         boxShadow: '0 2px 4px rgba(220, 38, 38, 0.8), 0 0 30px rgba(220, 38, 38, 0.5)'
                     }}
@@ -430,7 +431,7 @@ Shared from Edens News`;
 
                 {/* Facebook App ID */}
                 {import.meta.env.VITE_FACEBOOK_APP_ID && (
-                  <meta property="fb:app_id" content={import.meta.env.VITE_FACEBOOK_APP_ID} />
+                    <meta property="fb:app_id" content={import.meta.env.VITE_FACEBOOK_APP_ID} />
                 )}
 
                 {/* Image meta tags */}
@@ -459,7 +460,7 @@ Shared from Edens News`;
                 {/* Additional meta tags for better sharing */}
                 <meta name="author" content={article.reporter || 'Edens News'} />
                 <meta name="keywords" content={`news, ${article.category}, ${language === 'kn' ? 'ಕನ್ನಡ' : 'English'}, Edens News, ${article.reporter || ''}`} />
-                
+
                 {/* JSON-LD Structured Data for SEO */}
                 <script type="application/ld+json">
                     {JSON.stringify({
@@ -508,22 +509,22 @@ Shared from Edens News`;
                     )}
                     <span className="text-gray-900 dark:text-gray-100 truncate">{title.slice(0, 50)}...</span>
                 </nav>
-                
+
                 <article className="relative z-10 bg-white dark:bg-gray-800">
                     <header className="mb-8 sm:mb-8 article-header-mobile">
                         {article.category && <Badge className="mb-4 sm:mb-4 text-xs sm:text-sm">{String(article.category).replace(/\b\w/g, c => c.toUpperCase())}</Badge>}
                         <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-gray-100 leading-tight mb-4 sm:mb-4 relative ${language === 'kn' ? 'font-kannada' : ''}`}>{title}</h1>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-x-6 gap-y-1 text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                           <div className="flex items-center gap-2"><UserIcon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => {
-                               if (language === 'kn') return article.reporter_kn || article.reporter || '—';
-                               if (language === 'en') return article.reporter_en || article.reporter || '—';
-                               if (language === 'ta') return article.reporter_ta || article.reporter || '—';
-                               if (language === 'te') return article.reporter_te || article.reporter || '—';
-                               if (language === 'hi') return article.reporter_hi || article.reporter || '—';
-                               if (language === 'ml') return article.reporter_ml || article.reporter || '—';
-                               return article.reporter || '—';
-                           })()}</span></div>
-                           <div className="flex items-center gap-2"><Clock className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'MMMM d, yyyy') : '-'; })()}</span></div>
+                            <div className="flex items-center gap-2"><UserIcon className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => {
+                                if (language === 'kn') return article.reporter_kn || article.reporter || '—';
+                                if (language === 'en') return article.reporter_en || article.reporter || '—';
+                                if (language === 'ta') return article.reporter_ta || article.reporter || '—';
+                                if (language === 'te') return article.reporter_te || article.reporter || '—';
+                                if (language === 'hi') return article.reporter_hi || article.reporter || '—';
+                                if (language === 'ml') return article.reporter_ml || article.reporter || '—';
+                                return article.reporter || '—';
+                            })()}</span></div>
+                            <div className="flex items-center gap-2"><Clock className="w-4 h-4 sm:w-5 sm:h-5" /><span>{(() => { const raw = article.created_at || article.created_date; const d = raw ? new Date(raw) : null; const valid = d && !isNaN(d.getTime()); return valid ? format(d, 'MMMM d, yyyy') : '-'; })()}</span></div>
                         </div>
                     </header>
 

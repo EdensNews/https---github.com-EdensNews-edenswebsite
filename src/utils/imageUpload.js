@@ -42,11 +42,11 @@ export async function uploadImage(file, folder = 'images') {
 
     // Upload to Spaces
     const data = await s3.upload(params).promise();
-    
+
     // Return CDN URL
     const cdnUrl = `${CDN_URL}/${filename}`;
-    console.log('Image uploaded:', cdnUrl);
-    
+
+
     return cdnUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
@@ -63,15 +63,15 @@ export async function deleteImage(imageUrl) {
   try {
     // Extract key from CDN URL
     const key = imageUrl.replace(`${CDN_URL}/`, '');
-    
+
     const params = {
       Bucket: BUCKET_NAME,
       Key: key,
     };
 
     await s3.deleteObject(params).promise();
-    console.log('Image deleted:', imageUrl);
-    
+
+
     return true;
   } catch (error) {
     console.error('Error deleting image:', error);
@@ -99,10 +99,10 @@ export async function uploadMultipleImages(files, folder = 'images') {
 export async function optimizeImage(file, maxWidth = 1920) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       const img = new Image();
-      
+
       img.onload = () => {
         // Check if resize needed
         if (img.width <= maxWidth) {
@@ -119,7 +119,7 @@ export async function optimizeImage(file, maxWidth = 1920) {
         const canvas = document.createElement('canvas');
         canvas.width = newWidth;
         canvas.height = newHeight;
-        
+
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, newWidth, newHeight);
 

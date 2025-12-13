@@ -28,31 +28,30 @@ export default function Home() {
     try {
       const offset = pageNum * pageSize;
       let fetchedArticles = [];
-      
+
       if (category) {
         const slug = String(category).toLowerCase();
         fetchedArticles = await articlesRepo.listByCategory(slug, { limit: pageSize, offset });
-        if (!fetchedArticles || fetchedArticles.length === 0) {
-          // Fallback to latest if category has no results
-          fetchedArticles = await articlesRepo.list({ limit: pageSize, offset });
+        if (!fetchedArticles) {
+          fetchedArticles = [];
         }
       } else {
         // Fetch 21 articles for home page on first page (1 for hero + 20 for grid)
         const limit = pageNum === 0 ? pageSize + 1 : pageSize;
         fetchedArticles = await articlesRepo.list({ limit, offset });
       }
-      
+
       // Load view counts for all articles
       if (fetchedArticles.length > 0) {
         const articleIds = fetchedArticles.map(article => article.id);
         const viewCounts = await analyticsRepo.getViewCounts(articleIds);
-        
+
         // Add view counts to articles
         const articlesWithViews = fetchedArticles.map(article => ({
           ...article,
           views: viewCounts[article.id] || 0
         }));
-        
+
         setArticles(articlesWithViews);
         setHasMore(fetchedArticles.length === (pageNum === 0 && !category ? pageSize + 1 : pageSize));
         setPage(pageNum);
@@ -77,29 +76,29 @@ export default function Home() {
   if (languageLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Skeleton className="h-10 w-64 mb-8" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, index) =>
-          <div key={index} className="space-y-4">
-                            <Skeleton className="h-48 w-full rounded-xl" />
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-6 w-full" />
-                            <Skeleton className="h-6 w-3/4" />
-                        </div>
+        <Skeleton className="h-10 w-64 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, index) =>
+            <div key={index} className="space-y-4">
+              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-3/4" />
+            </div>
           )}
-                </div>
-            </div>);
+        </div>
+      </div>);
 
   }
 
   const pageTitle = category ?
-  language === 'kn' ? `${category} ಸುದ್ದಿ` : `${category} News` :
-  language === 'kn' ? 'ಇತ್ತೀಚಿನ ಸುದ್ದಿ' : 'Latest News';
+    language === 'kn' ? `${category} ಸುದ್ದಿ` : `${category} News` :
+    language === 'kn' ? 'ಇತ್ತೀಚಿನ ಸುದ್ದಿ' : 'Latest News';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <style>
-                {`
+      <style>
+        {`
                     /* Mobile-only spacing for Home page to clear header + ticker */
                     @media screen and (max-width: 640px) {
                         .home-page-wrapper {
@@ -108,90 +107,90 @@ export default function Home() {
                         }
                     }
                 `}
-            </style>
-            <div className="home-page-wrapper"></div>
-            <Helmet>
-                <title>{`${pageTitle} | Edens News`}</title>
-                <meta name="description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news in Kannada, English, Tamil, Telugu, Hindi, and Malayalam.`} />
-                <link rel="canonical" href="https://edensnews.com/home" />
+      </style>
+      <div className="home-page-wrapper"></div>
+      <Helmet>
+        <title>{`${pageTitle} | Edens News`}</title>
+        <meta name="description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news in Kannada, English, Tamil, Telugu, Hindi, and Malayalam.`} />
+        <link rel="canonical" href="https://edensnews.com/home" />
 
-                {/* Open Graph / Facebook */}
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content="https://edensnews.com/home" />
-                <meta property="og:title" content={`${pageTitle} | Edens News`} />
-                <meta property="og:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
-                <meta property="og:site_name" content="Edens News" />
-                <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://edensnews.com/home" />
+        <meta property="og:title" content={`${pageTitle} | Edens News`} />
+        <meta property="og:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
+        <meta property="og:site_name" content="Edens News" />
+        <meta property="og:locale" content={language === 'kn' ? 'kn_IN' : 'en_IN'} />
 
-                {/* Twitter Card */}
-                <meta name="twitter:card" content="summary" />
-                <meta name="twitter:site" content="@edensnews" />
-                <meta name="twitter:title" content={`${pageTitle} | Edens News`} />
-                <meta name="twitter:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
-            </Helmet>
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="@edensnews" />
+        <meta name="twitter:title" content={`${pageTitle} | Edens News`} />
+        <meta name="twitter:description" content={`Edens News - ${pageTitle}. Your trusted source for multilingual news.`} />
+      </Helmet>
 
-            {/* Hero Section - Show only on home page (no category filter) */}
-            {!category && articles.length > 0 && (
-                <HeroSection article={articles[0]} />
-            )}
+      {/* Hero Section - Show only on home page (no category filter) */}
+      {!category && articles.length > 0 && (
+        <HeroSection article={articles[0]} />
+      )}
 
-            <h2 className="text-2xl mb-8 font-extrabold text-center dark:text-gray-100 animate-slide-up-fade">
-                <span className="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent gradient-animate">
-                    {pageTitle}
-                </span>
-            </h2>
+      <h2 className="text-2xl mb-8 font-extrabold text-center dark:text-gray-100 animate-slide-up-fade">
+        <span className="inline-block bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent gradient-animate">
+          {pageTitle}
+        </span>
+      </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {isLoading ?
-        Array.from({ length: 8 }).map((_, index) =>
-        <div key={index} className={`space-y-4 animate-slide-up-fade stagger-${(index % 8) + 1}`}>
-                            <Skeleton className="h-48 w-full rounded-xl skeleton-shimmer" />
-                            <Skeleton className="h-4 w-1/4 skeleton-shimmer" />
-                            <Skeleton className="h-6 w-full skeleton-shimmer" />
-                            <Skeleton className="h-6 w-3/4 skeleton-shimmer" />
-                        </div>
-        ) :
-
-        articles && articles.length > 0 ? (
-          articles
-            .slice(category ? 0 : 1) // Skip first article on home page (shown in hero)
-            .map((article, index) =>
-              <div key={article.id} className={`stagger-${(index % 8) + 1}`}>
-                <ArticleCard article={article} />
-              </div>
-            )
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">
-              {language === 'kn' ? 'ಯಾವುದೇ ಲೇಖನಗಳು ಕಂಡುಬಂದಿಲ್ಲ' : 'No articles found'}
-            </p>
-          </div>
-        )
-        }
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {isLoading ?
+          Array.from({ length: 8 }).map((_, index) =>
+            <div key={index} className={`space-y-4 animate-slide-up-fade stagger-${(index % 8) + 1}`}>
+              <Skeleton className="h-48 w-full rounded-xl skeleton-shimmer" />
+              <Skeleton className="h-4 w-1/4 skeleton-shimmer" />
+              <Skeleton className="h-6 w-full skeleton-shimmer" />
+              <Skeleton className="h-6 w-3/4 skeleton-shimmer" />
             </div>
+          ) :
 
-            {/* Pagination */}
-            {!isLoading && articles.length > 0 && (
-                <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => fetchArticles(page - 1)}
-                        disabled={page === 0 || isLoading}
-                    >
-                        {language === 'kn' ? 'ಹಿಂದಿನದು' : 'Previous'}
-                    </Button>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {language === 'kn' ? `ಪುಟ ${page + 1}` : `Page ${page + 1}`}
-                    </span>
-                    <Button 
-                        variant="outline" 
-                        onClick={() => fetchArticles(page + 1)}
-                        disabled={!hasMore || isLoading}
-                    >
-                        {language === 'kn' ? 'ಮುಂದಿನದು' : 'Next'}
-                    </Button>
+          articles && articles.length > 0 ? (
+            articles
+              .slice(category ? 0 : 1) // Skip first article on home page (shown in hero)
+              .map((article, index) =>
+                <div key={article.id} className={`stagger-${(index % 8) + 1}`}>
+                  <ArticleCard article={article} />
                 </div>
-            )}
-        </div>);
+              )
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 dark:text-gray-400">
+                {language === 'kn' ? 'ಯಾವುದೇ ಲೇಖನಗಳು ಕಂಡುಬಂದಿಲ್ಲ' : 'No articles found'}
+              </p>
+            </div>
+          )
+        }
+      </div>
+
+      {/* Pagination */}
+      {!isLoading && articles.length > 0 && (
+        <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            variant="outline"
+            onClick={() => fetchArticles(page - 1)}
+            disabled={page === 0 || isLoading}
+          >
+            {language === 'kn' ? 'ಹಿಂದಿನದು' : 'Previous'}
+          </Button>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {language === 'kn' ? `ಪುಟ ${page + 1}` : `Page ${page + 1}`}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() => fetchArticles(page + 1)}
+            disabled={!hasMore || isLoading}
+          >
+            {language === 'kn' ? 'ಮುಂದಿನದು' : 'Next'}
+          </Button>
+        </div>
+      )}
+    </div>);
 
 }

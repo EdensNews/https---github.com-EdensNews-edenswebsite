@@ -34,8 +34,21 @@ export const articlesRepo = {
   },
 
   async searchByCategory(q, slug, { limit = 20, offset = 0 } = {}) {
-    // For now, just search all articles
-    return this.search(q, { limit, offset })
+    try {
+      // First search generally
+      const searchResults = await this.search(q, { limit: 100, offset: 0 }); // Get more results to filter client-side
+      
+      // Filter by category (case-insensitive)
+      const filtered = searchResults.filter(article => 
+        article.category && article.category.toLowerCase() === slug.toLowerCase()
+      );
+      
+      // Apply pagination manually
+      return filtered.slice(offset, offset + limit);
+    } catch (error) {
+       console.error('Error searching articles by category:', error);
+       return [];
+    }
   },
 
   async get(id) {

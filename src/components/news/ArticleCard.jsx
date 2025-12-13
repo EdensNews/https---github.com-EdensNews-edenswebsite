@@ -11,10 +11,9 @@ export default function ArticleCard({ article }) {
     const { language } = useLanguage();
     const { toast } = useToast();
     const [viewCount] = useState(article.views || 0);
-    
-    // Debug: Log view count
-    console.log('Article:', article.id, 'Views:', article.views, 'ViewCount:', viewCount);
-    
+
+
+
     const title = (() => {
         // Prefer exact language match, then sensible fallbacks
         if (language === 'kn') return article.title_kn || article.title_en || article.title_ta || article.title_te || article.title_hi || article.title_ml || '';
@@ -28,7 +27,7 @@ export default function ArticleCard({ article }) {
     const categoryText = (() => {
         if (!article.category) return '';
         const cat = String(article.category);
-        
+
         if (language === 'kn') {
             const knMap = {
                 'Politics': 'ರಾಜಕೀಯ', 'politics': 'ರಾಜಕೀಯ',
@@ -98,8 +97,8 @@ export default function ArticleCard({ article }) {
     })();
 
     // Check if breaking news is still valid (within 1 hour)
-    const isBreaking = article.is_breaking && 
-        article.breaking_expires_at && 
+    const isBreaking = article.is_breaking &&
+        article.breaking_expires_at &&
         new Date(article.breaking_expires_at) > new Date();
 
     const categoryColors = {
@@ -116,21 +115,21 @@ export default function ArticleCard({ article }) {
         // Prevent the link from navigating when sharing
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Use the article URL for sharing
         const shareUrl = `${window.location.origin}/articledetail?id=${article.id}`;
-        
+
         // Create a more comprehensive share text that works across platforms
         const shareText = `${title}
 
 ${shareUrl}
 
 Shared from Edens News`;
-        
+
         // Strategy 1: Try sharing with the appropriate URL
         if (navigator.share) {
             try {
-                await navigator.share({ 
+                await navigator.share({
                     title: title,
                     text: shareText,
                     url: shareUrl
@@ -143,7 +142,7 @@ Shared from Edens News`;
                 console.warn('Share failed:', err);
             }
         }
-        
+
         // Strategy 2: Try sharing with image thumbnail (client-side generation)
         const imageUrl = article.image_url;
         if (imageUrl && navigator.canShare && navigator.share) {
@@ -151,40 +150,40 @@ Shared from Edens News`;
                 // First try to fetch the image with CORS
                 let response;
                 try {
-                    response = await fetch(imageUrl, { 
+                    response = await fetch(imageUrl, {
                         mode: 'cors',
                         credentials: 'omit'
                     });
                 } catch (corsError) {
                     console.warn('CORS fetch failed, trying no-cors approach:', corsError);
                     // Try using no-cors mode
-                    response = await fetch(imageUrl, { 
+                    response = await fetch(imageUrl, {
                         mode: 'no-cors'
                     });
                 }
-                
+
                 if (response && response.ok) {
                     const blob = await response.blob();
-                    
+
                     // Check if blob is valid
                     if (blob.size > 0) {
                         // Generate smaller thumbnail for better compatibility (300x300, compressed)
                         const thumbnailBlob = await generateThumbnail(blob, 300, 300);
-                        
+
                         if (thumbnailBlob) {
                             const fileName = (imageUrl.split('/').pop() || 'image').split('?')[0];
                             // Preserve the original file extension
                             const fileExtension = fileName.includes('.') ? fileName.substring(fileName.lastIndexOf('.')) : '.jpg';
                             const safeName = `thumbnail_${fileName.includes('.') ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName}${fileExtension}`;
                             const file = new File([thumbnailBlob], safeName, { type: thumbnailBlob.type || 'image/jpeg' });
-                            
+
                             const shareData = {
                                 title: title,
                                 text: shareText,
                                 url: url,
                                 files: [file]
                             };
-                            
+
                             if (navigator.canShare(shareData)) {
                                 await navigator.share(shareData);
                                 toast({ title: "Article shared with thumbnail!", duration: 3000 });
@@ -197,7 +196,7 @@ Shared from Edens News`;
                 console.warn('Failed to share with thumbnail:', err);
             }
         }
-        
+
         // Final fallback: copy to clipboard
         try {
             await navigator.clipboard.writeText(shareText);
@@ -207,24 +206,24 @@ Shared from Edens News`;
             toast({ title: "Failed to share article", variant: "destructive", duration: 5000 });
         }
     };
-    
+
     // Helper function to generate thumbnail using HTML5 Canvas
     const generateThumbnail = (blob, maxWidth, maxHeight) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous'; // Enable CORS for images
-            
+
             img.onload = () => {
                 try {
                     // Create canvas
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    
+
                     if (!ctx) {
                         reject(new Error('Canvas context not available'));
                         return;
                     }
-                    
+
                     // Calculate dimensions maintaining aspect ratio
                     let { width, height } = img;
                     if (width > height) {
@@ -238,13 +237,13 @@ Shared from Edens News`;
                             height = maxHeight;
                         }
                     }
-                    
+
                     // Set canvas dimensions
                     canvas.height = height;
-                    
+
                     // Draw image on canvas
                     ctx.drawImage(img, 0, 0, width, height);
-                    
+
                     // Convert canvas to blob with lower quality for smaller file size
                     canvas.toBlob((blob) => {
                         if (blob) {
@@ -265,15 +264,15 @@ Shared from Edens News`;
                     reject(error);
                 }
             };
-            
+
             img.onerror = (error) => {
                 reject(new Error('Failed to load image for thumbnail generation'));
             };
-            
+
             // Load image from blob
             const objectUrl = URL.createObjectURL(blob);
             img.src = objectUrl;
-            
+
             // Clean up object URL after a delay
             setTimeout(() => {
                 URL.revokeObjectURL(objectUrl);
@@ -286,10 +285,10 @@ Shared from Edens News`;
             <Link to={createPageUrl(`ArticleDetail?id=${article.id}`)} className="block">
                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-md hover:shadow-2xl dark:shadow-gray-900/30 transition-elastic transform hover:-translate-y-2 hover:scale-[1.02] border border-gray-100 dark:border-gray-700 h-full flex flex-col relative shimmer-effect">
                     <div className="relative overflow-hidden transform-3d">
-                        <img 
-                            src={article.image_url} 
-                            alt={title} 
-                            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700" 
+                        <img
+                            src={article.image_url}
+                            alt={title}
+                            className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         {/* Extremely subtle shimmer overlay on hover */}
@@ -319,13 +318,13 @@ Shared from Edens News`;
                         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mt-auto">
                             <p className="font-medium truncate flex-1 mr-2">{article.reporter}</p>
                             <div className="flex items-center gap-1 shrink-0">
-                               <Clock className="w-4 h-4"/>
-                               {(() => {
-                                 const raw = article.created_at || article.created_date;
-                                 const d = raw ? new Date(raw) : null;
-                                 const valid = d && !isNaN(d.getTime());
-                                 return <span>{valid ? format(d, 'MMM d, yyyy') : '-'}</span>;
-                               })()}
+                                <Clock className="w-4 h-4" />
+                                {(() => {
+                                    const raw = article.created_at || article.created_date;
+                                    const d = raw ? new Date(raw) : null;
+                                    const valid = d && !isNaN(d.getTime());
+                                    return <span>{valid ? format(d, 'MMM d, yyyy') : '-'}</span>;
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -333,7 +332,7 @@ Shared from Edens News`;
                 </div>
             </Link>
             <div className="mt-2 flex justify-end">
-                <button 
+                <button
                     onClick={handleShare}
                     className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 transition-bounce hover:scale-110 ripple-effect"
                 >
